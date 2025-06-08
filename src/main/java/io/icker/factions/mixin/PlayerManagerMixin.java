@@ -1,6 +1,5 @@
 package io.icker.factions.mixin;
 
-import io.icker.factions.FactionsMod;
 import io.icker.factions.api.persistents.User;
 import io.icker.factions.util.StyledChatCompatibility;
 import net.fabricmc.loader.api.FabricLoader;

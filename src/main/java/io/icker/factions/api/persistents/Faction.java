@@ -1,5 +1,11 @@
 package io.icker.factions.api.persistents;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
+import org.jetbrains.annotations.Nullable;
 import io.icker.factions.FactionsMod;
 import io.icker.factions.api.events.FactionEvents;
 import io.icker.factions.database.Database;
@@ -10,13 +16,11 @@ import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.collection.DefaultedList;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.*;
 
 @Name("Faction")
 public class Faction {
-    private static final HashMap<UUID, Faction> STORE = Database.load(Faction.class, Faction::getID);
+    private static final HashMap<UUID, Faction> STORE =
+            Database.load(Faction.class, Faction::getID);
 
     @Field("ID")
     private UUID id;
@@ -58,9 +62,11 @@ public class Faction {
     private ArrayList<Relationship> relationships = new ArrayList<>();
 
     @Field("GuestPermissions")
-    public ArrayList<Relationship.Permissions> guest_permissions = new ArrayList<>(FactionsMod.CONFIG.RELATIONSHIPS.DEFAULT_GUEST_PERMISSIONS);
+    public ArrayList<Relationship.Permissions> guest_permissions =
+            new ArrayList<>(FactionsMod.CONFIG.RELATIONSHIPS.DEFAULT_GUEST_PERMISSIONS);
 
-    public Faction(String name, String description, String motd, Formatting color, boolean open, int power) {
+    public Faction(String name, String description, String motd, Formatting color, boolean open,
+            int power) {
         this.id = UUID.randomUUID();
         this.name = name;
         this.motd = motd;
@@ -85,11 +91,7 @@ public class Faction {
 
     @Nullable
     public static Faction getByName(String name) {
-        return STORE.values()
-            .stream()
-            .filter(f -> f.name.equals(name))
-            .findFirst()
-            .orElse(null);
+        return STORE.values().stream().filter(f -> f.name.equals(name)).findFirst().orElse(null);
     }
 
     public static void add(Faction faction) {
@@ -102,10 +104,7 @@ public class Faction {
 
     @SuppressWarnings("unused")
     public static List<Faction> allBut(UUID id) {
-        return STORE.values()
-            .stream()
-            .filter(f -> f.id != id)
-            .toList();
+        return STORE.values().stream().filter(f -> f.id != id).toList();
     }
 
     public UUID getID() {
@@ -176,7 +175,8 @@ public class Faction {
         int newPower = Math.min(Math.max(0, power + adjustment), maxPower);
         int oldPower = this.power;
 
-        if (newPower == oldPower) return 0;
+        if (newPower == oldPower)
+            return 0;
 
         power = newPower;
         FactionEvents.POWER_CHANGE.invoker().onPowerChange(this, oldPower);
@@ -200,9 +200,7 @@ public class Faction {
     }
 
     public void removeAllClaims() {
-        Claim.getByFaction(id)
-            .stream()
-            .forEach(Claim::remove);
+        Claim.getByFaction(id).stream().forEach(Claim::remove);
         FactionEvents.REMOVE_ALL_CLAIMS.invoker().onRemoveAllClaims(this);
     }
 
@@ -224,7 +222,8 @@ public class Faction {
     }
 
     public Relationship getRelationship(UUID target) {
-        return relationships.stream().filter(rel -> rel.target.equals(target)).findFirst().orElse(new Relationship(target, Relationship.Status.NEUTRAL));
+        return relationships.stream().filter(rel -> rel.target.equals(target)).findFirst()
+                .orElse(new Relationship(target, Relationship.Status.NEUTRAL));
     }
 
     public Relationship getReverse(Relationship rel) {
@@ -233,7 +232,8 @@ public class Faction {
 
     public boolean isMutualAllies(UUID target) {
         Relationship rel = getRelationship(target);
-        return rel.status == Relationship.Status.ALLY && getReverse(rel).status == Relationship.Status.ALLY;
+        return rel.status == Relationship.Status.ALLY
+                && getReverse(rel).status == Relationship.Status.ALLY;
     }
 
     public List<Relationship> getMutualAllies() {
@@ -241,22 +241,26 @@ public class Faction {
     }
 
     public List<Relationship> getEnemiesWith() {
-        return relationships.stream().filter(rel -> rel.status == Relationship.Status.ENEMY).toList();
+        return relationships.stream().filter(rel -> rel.status == Relationship.Status.ENEMY)
+                .toList();
     }
 
     public List<Relationship> getEnemiesOf() {
-        return relationships.stream().filter(rel -> getReverse(rel).status == Relationship.Status.ENEMY).toList();
+        return relationships.stream()
+                .filter(rel -> getReverse(rel).status == Relationship.Status.ENEMY).toList();
     }
 
     public void removeRelationship(UUID target) {
-        relationships = new ArrayList<>(relationships.stream().filter(rel -> !rel.target.equals(target)).toList());
+        relationships = new ArrayList<>(
+                relationships.stream().filter(rel -> !rel.target.equals(target)).toList());
     }
 
     public void setRelationship(Relationship relationship) {
         if (getRelationship(relationship.target) != null) {
             removeRelationship(relationship.target);
         }
-        if (relationship.status != Relationship.Status.NEUTRAL || !relationship.permissions.isEmpty())
+        if (relationship.status != Relationship.Status.NEUTRAL
+                || !relationship.permissions.isEmpty())
             relationships.add(relationship);
     }
 
@@ -277,8 +281,10 @@ public class Faction {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Faction faction = (Faction) o;
         return id.equals(faction.id);
     }
@@ -299,8 +305,9 @@ public class Faction {
         Database.save(Faction.class, STORE.values().stream().toList());
     }
 
-//  TODO(samu): import per-player power patch
-    public int calculateMaxPower(){
-        return FactionsMod.CONFIG.POWER.BASE + (getUsers().size() * FactionsMod.CONFIG.POWER.MEMBER);
+    // TODO(samu): import per-player power patch
+    public int calculateMaxPower() {
+        return FactionsMod.CONFIG.POWER.BASE
+                + (getUsers().size() * FactionsMod.CONFIG.POWER.MEMBER);
     }
 }

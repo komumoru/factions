@@ -19,16 +19,9 @@ public class SafeCommand implements Command {
 
     @Override
     public LiteralCommandNode<ServerCommandSource> getNode() {
-        return CommandManager
-            .literal("safe")
-            .requires(
-                Requires.multiple(
-                    Requires.hasPerms("faction.safe", 0),
-                    Requires.isMember(),
-                    s -> FactionsMod.CONFIG.SAFE != null
-                )
-            )
-            .executes(this::run)
-            .build();
+        return CommandManager.literal("safe")
+                .requires(Requires.multiple(Requires.hasPerms("faction.safe", 0),
+                        Requires.isMember(), s -> FactionsMod.CONFIG.SAFE != null))
+                .executes(this::run).build();
     }
 }

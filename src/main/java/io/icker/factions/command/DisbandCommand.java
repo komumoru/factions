@@ -26,10 +26,15 @@ public class DisbandCommand implements Command {
 
         User user = Command.getUser(player);
         Faction faction = user.getFaction();
-        assert faction != null;
+        if (faction == null)
+            return 0;
 
         if (!faction.getSafe().isEmpty() && !confirm) {
-            new Message("Your faction safe isn't empty.").add(new Message("\nContinue and move the items to your inventory").hover("Click to confirm").click("/f disband confirm").format(Formatting.GREEN)).send(player, false);
+            new Message("Your faction safe isn't empty.")
+                    .add(new Message("\nContinue and move the items to your inventory")
+                            .hover("Click to confirm").click("/f disband confirm")
+                            .format(Formatting.GREEN))
+                    .send(player, false);
             return 0;
         }
 
@@ -49,11 +54,11 @@ public class DisbandCommand implements Command {
 
     @Override
     public LiteralCommandNode<ServerCommandSource> getNode() {
-        return CommandManager
-            .literal("disband")
-            .requires(Requires.multiple(Requires.isOwner(), Requires.hasPerms("factions.disband", 0)))
-            .executes(context -> this.run(context, false))
-            .then(CommandManager.literal("confirm").executes(context -> this.run(context, true)))
-            .build();
+        return CommandManager.literal("disband")
+                .requires(Requires.multiple(Requires.isOwner(),
+                        Requires.hasPerms("factions.disband", 0)))
+                .executes(context -> this.run(context, false)).then(CommandManager
+                        .literal("confirm").executes(context -> this.run(context, true)))
+                .build();
     }
 }

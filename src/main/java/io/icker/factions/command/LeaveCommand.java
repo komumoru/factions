@@ -22,9 +22,7 @@ public class LeaveCommand implements Command {
 
         user.leaveFaction();
         new Message(player.getName().getString() + " left").send(faction);
-        new Message("You have left this faction.")
-            .prependFaction(faction)
-            .send(player, false);
+        new Message("You have left this faction.").prependFaction(faction).send(player, false);
 
         context.getSource().getServer().getPlayerManager().sendCommandTree(player);
 
@@ -38,10 +36,10 @@ public class LeaveCommand implements Command {
     }
 
     public LiteralCommandNode<ServerCommandSource> getNode() {
-        return CommandManager
-            .literal("leave")
-            .requires(Requires.multiple(Requires.require(m -> m.isInFaction() && m.rank != User.Rank.OWNER), Requires.hasPerms("factions.leave", 0)))
-            .executes(this::run)
-            .build();
+        return CommandManager.literal("leave")
+                .requires(Requires.multiple(
+                        Requires.require(m -> m.isInFaction() && m.rank != User.Rank.OWNER),
+                        Requires.hasPerms("factions.leave", 0)))
+                .executes(this::run).build();
     }
 }

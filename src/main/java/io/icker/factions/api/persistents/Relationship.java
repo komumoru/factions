@@ -2,6 +2,8 @@ package io.icker.factions.api.persistents;
 
 import java.util.ArrayList;
 import java.util.UUID;
+
+import io.icker.factions.FactionsMod;
 import io.icker.factions.database.Field;
 
 public class Relationship {
@@ -20,7 +22,7 @@ public class Relationship {
     public Status status;
 
     @Field("Permissions")
-    public ArrayList<Permissions> permissions = new ArrayList<>();
+    public ArrayList<Permissions> permissions = new ArrayList<>(FactionsMod.CONFIG.RELATIONSHIPS.DEFAULT_GUEST_PERMISSIONS);
 
     public Relationship(UUID target, Status status) {
         this.target = target;

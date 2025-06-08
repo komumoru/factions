@@ -18,6 +18,9 @@ public class PowerConfig {
     @SerializedName("powerTicks")
     public PowerTicks POWER_TICKS = new PowerTicks();
 
+    @SerializedName("powerPerAlly")
+    public int POWER_PER_ALLY = 0;
+
     public static class PowerTicks {
         @SerializedName("ticks")
         public int TICKS = 12000;

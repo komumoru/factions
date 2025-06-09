@@ -36,6 +36,8 @@
   },
   "suggests": {
     "fabric-permissions-api-v0": "*",
-    "dynmap": ">=3.0"
+    "dynmap": ">=3.0",
+    "squaremap": ">=1.0",
+    "bluemap": ">=2.0"
   }
 }

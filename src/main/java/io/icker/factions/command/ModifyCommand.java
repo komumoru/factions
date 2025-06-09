@@ -21,7 +21,7 @@ public class ModifyCommand implements Command {
         String name = StringArgumentType.getString(context, "name");
 
         ServerCommandSource source = context.getSource();
-        ServerPlayerEntity player = source.getPlayer();
+        ServerPlayerEntity player = source.getPlayerOrThrow();
 
         if (FactionsMod.CONFIG.DISPLAY.NAME_BLACKLIST.contains(name.toLowerCase(Locale.ROOT))) {
             new Message("Cannot rename a faction to that name as it is on the blacklist").fail()
@@ -55,7 +55,7 @@ public class ModifyCommand implements Command {
         String description = StringArgumentType.getString(context, "description");
 
         ServerCommandSource source = context.getSource();
-        ServerPlayerEntity player = source.getPlayer();
+        ServerPlayerEntity player = source.getPlayerOrThrow();
 
         Faction faction = Command.getUser(player).getFaction();
 
@@ -70,7 +70,7 @@ public class ModifyCommand implements Command {
         String motd = StringArgumentType.getString(context, "motd");
 
         ServerCommandSource source = context.getSource();
-        ServerPlayerEntity player = source.getPlayer();
+        ServerPlayerEntity player = source.getPlayerOrThrow();
 
         Faction faction = Command.getUser(player).getFaction();
 
@@ -85,7 +85,7 @@ public class ModifyCommand implements Command {
         Formatting color = ColorArgumentType.getColor(context, "color");
 
         ServerCommandSource source = context.getSource();
-        ServerPlayerEntity player = source.getPlayer();
+        ServerPlayerEntity player = source.getPlayerOrThrow();
 
         Faction faction = Command.getUser(player).getFaction();
 
@@ -101,7 +101,7 @@ public class ModifyCommand implements Command {
         boolean open = BoolArgumentType.getBool(context, "open");
 
         ServerCommandSource source = context.getSource();
-        ServerPlayerEntity player = source.getPlayer();
+        ServerPlayerEntity player = source.getPlayerOrThrow();
 
         Faction faction = Command.getUser(player).getFaction();
 

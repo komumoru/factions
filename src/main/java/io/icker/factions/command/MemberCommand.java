@@ -21,7 +21,7 @@ import net.minecraft.util.Util;
 public class MemberCommand implements Command {
     private int self(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         ServerCommandSource source = context.getSource();
-        ServerPlayerEntity player = source.getPlayer();
+        ServerPlayerEntity player = source.getPlayerOrThrow();
 
         User user = Command.getUser(player);
         if (!user.isInFaction()) {
@@ -36,7 +36,7 @@ public class MemberCommand implements Command {
         String factionName = StringArgumentType.getString(context, "faction");
 
         ServerCommandSource source = context.getSource();
-        ServerPlayerEntity player = source.getPlayer();
+        ServerPlayerEntity player = source.getPlayerOrThrow();
 
         Faction faction = Faction.getByName(factionName);
         if (faction == null) {

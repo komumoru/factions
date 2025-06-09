@@ -18,7 +18,7 @@ public class KickCommand implements Command {
         ServerPlayerEntity target = EntityArgumentType.getPlayer(context, "player");
 
         ServerCommandSource source = context.getSource();
-        ServerPlayerEntity player = source.getPlayer();
+        ServerPlayerEntity player = source.getPlayerOrThrow();
 
         if (target.getUuid().equals(player.getUuid())) {
             new Message("Cannot kick yourself").format(Formatting.RED).send(player, false);

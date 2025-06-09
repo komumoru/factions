@@ -15,7 +15,7 @@ import net.minecraft.util.Formatting;
 public class ListCommand implements Command {
     private int run(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         ServerCommandSource source = context.getSource();
-        ServerPlayerEntity player = source.getPlayer();
+        ServerPlayerEntity player = source.getPlayerOrThrow();
 
         Collection<Faction> factions = Faction.all();
         int size = factions.size();

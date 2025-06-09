@@ -7,6 +7,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.icker.factions.FactionsMod;
+import io.icker.factions.api.events.ClaimEvents.Add;
 import io.icker.factions.api.persistents.Faction;
 import io.icker.factions.api.persistents.User;
 import me.lucko.fabric.api.permissions.v0.Permissions;
@@ -75,6 +76,9 @@ public interface Command {
         public static Predicate<ServerCommandSource> require(Requires req) {
             return source -> {
                 ServerPlayerEntity entity = source.getPlayer();
+                if (entity == null) {
+                    return false;
+                }
                 User user = Command.getUser(entity);
                 return req.run(user);
             };
@@ -130,7 +134,7 @@ public interface Command {
 
         public static SuggestionProvider<ServerCommandSource> suggest(Suggests sug) {
             return (context, builder) -> {
-                ServerPlayerEntity entity = context.getSource().getPlayer();
+                ServerPlayerEntity entity = context.getSource().getPlayerOrThrow();
                 User user = User.get(entity.getUuid());
                 for (String suggestion : sug.run(user)) {
                     builder.suggest(suggestion);

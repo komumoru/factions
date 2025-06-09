@@ -23,11 +23,11 @@ public class InviteCommand implements Command {
     private int list(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         ServerCommandSource source = context.getSource();
 
-        List<UUID> invites = Command.getUser(source.getPlayer()).getFaction().invites;
+        List<UUID> invites = Command.getUser(source.getPlayerOrThrow()).getFaction().invites;
         int count = invites.size();
 
         new Message("You have ").add(new Message(String.valueOf(count)).format(Formatting.YELLOW))
-                .add(" outgoing invite%s", count == 1 ? "" : "s").send(source.getPlayer(), false);
+                .add(" outgoing invite%s", count == 1 ? "" : "s").send(source.getPlayerOrThrow(), false);
 
         if (count == 0)
             return 1;
@@ -38,7 +38,7 @@ public class InviteCommand implements Command {
                         .orElse(new GameProfile(Util.NIL_UUID, "{Uncached Player}")).getName())
                 .collect(Collectors.joining(", "));
 
-        new Message(players).format(Formatting.ITALIC).send(source.getPlayer(), false);
+        new Message(players).format(Formatting.ITALIC).send(source.getPlayerOrThrow(), false);
         return 1;
     }
 
@@ -46,9 +46,9 @@ public class InviteCommand implements Command {
         ServerPlayerEntity target = EntityArgumentType.getPlayer(context, "player");
 
         ServerCommandSource source = context.getSource();
-        ServerPlayerEntity player = source.getPlayer();
+        ServerPlayerEntity player = source.getPlayerOrThrow();
 
-        Faction faction = Command.getUser(source.getPlayer()).getFaction();
+        Faction faction = Command.getUser(source.getPlayerOrThrow()).getFaction();
         if (faction.isInvited(player.getUuid())) {
             new Message(target.getName().getString() + " was already invited to your faction")
                     .format(Formatting.RED).send(player, false);
@@ -76,7 +76,7 @@ public class InviteCommand implements Command {
         ServerPlayerEntity target = EntityArgumentType.getPlayer(context, "player");
 
         ServerCommandSource source = context.getSource();
-        ServerPlayerEntity player = source.getPlayer();
+        ServerPlayerEntity player = source.getPlayerOrThrow();
 
         Faction faction = Command.getUser(player).getFaction();
         if (faction.invites.remove(target.getUuid())) {

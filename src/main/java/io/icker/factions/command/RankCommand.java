@@ -19,7 +19,7 @@ public class RankCommand implements Command {
         ServerPlayerEntity target = EntityArgumentType.getPlayer(context, "player");
 
         ServerCommandSource source = context.getSource();
-        ServerPlayerEntity player = source.getPlayer();
+        ServerPlayerEntity player = source.getPlayerOrThrow();
 
         if (target.getUuid().equals(player.getUuid())) {
             new Message("You cannot promote yourself").format(Formatting.RED).send(player, false);
@@ -66,7 +66,7 @@ public class RankCommand implements Command {
         ServerPlayerEntity target = EntityArgumentType.getPlayer(context, "player");
 
         ServerCommandSource source = context.getSource();
-        ServerPlayerEntity player = source.getPlayer();
+        ServerPlayerEntity player = source.getPlayerOrThrow();
 
         if (target.getUuid().equals(player.getUuid())) {
             new Message("You cannot demote yourself").format(Formatting.RED).send(player, false);
@@ -121,7 +121,7 @@ public class RankCommand implements Command {
         ServerPlayerEntity target = EntityArgumentType.getPlayer(context, "player");
 
         ServerCommandSource source = context.getSource();
-        ServerPlayerEntity player = source.getPlayer();
+        ServerPlayerEntity player = source.getPlayerOrThrow();
 
         if (target.getUuid().equals(player.getUuid())) {
             new Message("You cannot transfer ownership to yourself").format(Formatting.RED)

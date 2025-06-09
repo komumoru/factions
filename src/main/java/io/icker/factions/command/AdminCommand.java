@@ -1,27 +1,30 @@
 package io.icker.factions.command;
 
-import java.util.Optional;
-import java.util.UUID;
 import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+
 import io.icker.factions.FactionsMod;
 import io.icker.factions.api.persistents.Claim;
 import io.icker.factions.api.persistents.Faction;
 import io.icker.factions.api.persistents.User;
 import io.icker.factions.util.Command;
 import io.icker.factions.util.Message;
+
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Formatting;
 
+import java.util.Optional;
+import java.util.UUID;
+
 public class AdminCommand implements Command {
     private int bypass(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+        ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
 
         User user = User.get(player.getUuid());
         boolean bypass = !user.bypass;
@@ -37,12 +40,12 @@ public class AdminCommand implements Command {
 
     private int reload(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         FactionsMod.dynmap.reloadAll();
-        new Message("Reloaded dynmap marker").send(context.getSource().getPlayer(), false);
+        new Message("Reloaded dynmap marker").send(context.getSource().getPlayerOrThrow(), false);
         return 1;
     }
 
     private int power(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+        ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
 
         Faction target = Faction.getByName(StringArgumentType.getString(context, "faction"));
         int power = IntegerArgumentType.getInteger(context, "power");
@@ -68,7 +71,7 @@ public class AdminCommand implements Command {
 
     private int spoof(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         ServerCommandSource source = context.getSource();
-        ServerPlayerEntity player = source.getPlayer();
+        ServerPlayerEntity player = source.getPlayerOrThrow();
 
         User user = User.get(player.getUuid());
 
@@ -93,7 +96,7 @@ public class AdminCommand implements Command {
     private int clearSpoof(CommandContext<ServerCommandSource> context)
             throws CommandSyntaxException {
         ServerCommandSource source = context.getSource();
-        ServerPlayerEntity player = source.getPlayer();
+        ServerPlayerEntity player = source.getPlayerOrThrow();
 
         User user = User.get(player.getUuid());
 
@@ -104,15 +107,16 @@ public class AdminCommand implements Command {
         return 1;
     }
 
-    private int audit(CommandContext<ServerCommandSource> context) {
-        ServerCommandSource source = context.getSource();
-        ServerPlayerEntity player = source.getPlayer();
+    private int audit(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
 
         for (int i = 0; i < 4; i++) {
             Claim.audit();
             Faction.audit();
             User.audit();
         }
+
+        ServerCommandSource source = context.getSource();
+        ServerPlayerEntity player = source.getPlayerOrThrow();
 
         if (player != null) {
             new Message("Successful audit").send(player, false);

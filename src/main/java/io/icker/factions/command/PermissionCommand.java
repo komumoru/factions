@@ -1,25 +1,29 @@
 package io.icker.factions.command;
 
-import java.util.stream.Collectors;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+
 import io.icker.factions.api.persistents.Faction;
 import io.icker.factions.api.persistents.Relationship;
 import io.icker.factions.api.persistents.Relationship.Permissions;
 import io.icker.factions.api.persistents.User;
 import io.icker.factions.util.Command;
 import io.icker.factions.util.Message;
+
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Formatting;
 
+import java.util.stream.Collectors;
+
 public class PermissionCommand implements Command {
-    private int change(CommandContext<ServerCommandSource> context, boolean add) {
+    private int change(CommandContext<ServerCommandSource> context, boolean add) throws CommandSyntaxException {
         String permissionName = StringArgumentType.getString(context, "permission");
         ServerCommandSource source = context.getSource();
-        ServerPlayerEntity player = source.getPlayer();
+        ServerPlayerEntity player = source.getPlayerOrThrow();
 
         if (player == null)
             return 0;
@@ -64,18 +68,18 @@ public class PermissionCommand implements Command {
         return 1;
     }
 
-    private int add(CommandContext<ServerCommandSource> context) {
+    private int add(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         return change(context, true);
     }
 
-    private int remove(CommandContext<ServerCommandSource> context) {
+    private int remove(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         return change(context, false);
     }
 
-    private int changeGuest(CommandContext<ServerCommandSource> context, boolean add) {
+    private int changeGuest(CommandContext<ServerCommandSource> context, boolean add) throws CommandSyntaxException {
         String permissionName = StringArgumentType.getString(context, "permission");
         ServerCommandSource source = context.getSource();
-        ServerPlayerEntity player = source.getPlayer();
+        ServerPlayerEntity player = source.getPlayerOrThrow();
 
         if (player == null)
             return 0;
@@ -114,17 +118,17 @@ public class PermissionCommand implements Command {
         return 1;
     }
 
-    private int addGuest(CommandContext<ServerCommandSource> context) {
+    private int addGuest(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         return changeGuest(context, true);
     }
 
-    private int removeGuest(CommandContext<ServerCommandSource> context) {
+    private int removeGuest(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         return changeGuest(context, false);
     }
 
-    private int list(CommandContext<ServerCommandSource> context) {
+    private int list(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         ServerCommandSource source = context.getSource();
-        ServerPlayerEntity player = source.getPlayer();
+        ServerPlayerEntity player = source.getPlayerOrThrow();
 
         if (player == null)
             return 0;
@@ -150,9 +154,9 @@ public class PermissionCommand implements Command {
         return 1;
     }
 
-    private int listGuest(CommandContext<ServerCommandSource> context) {
+    private int listGuest(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         ServerCommandSource source = context.getSource();
-        ServerPlayerEntity player = source.getPlayer();
+        ServerPlayerEntity player = source.getPlayerOrThrow();
 
         if (player == null)
             return 0;

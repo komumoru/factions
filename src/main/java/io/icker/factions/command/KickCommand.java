@@ -3,15 +3,16 @@ package io.icker.factions.command;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+
 import io.icker.factions.api.persistents.Faction;
 import io.icker.factions.api.persistents.User;
 import io.icker.factions.util.Command;
 import io.icker.factions.util.Message;
+
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Formatting;
 
 public class KickCommand implements Command {
     private int run(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
@@ -21,7 +22,9 @@ public class KickCommand implements Command {
         ServerPlayerEntity player = source.getPlayerOrThrow();
 
         if (target.getUuid().equals(player.getUuid())) {
-            new Message("Cannot kick yourself").format(Formatting.RED).send(player, false);
+            new Message("Cannot kick yourself")
+                .fail()
+                .send(player, false);
             return 0;
         }
 
@@ -29,15 +32,19 @@ public class KickCommand implements Command {
         User targetUser = User.get(target.getUuid());
         Faction faction = selfUser.getFaction();
 
-        if (targetUser.getFaction().getID() != faction.getID()) {
-            new Message("Cannot kick someone that is not in your faction");
+        if (targetUser.getFaction() == null
+                || !targetUser.getFaction().equals(selfUser.getFaction())) {
+            new Message("Cannot kick someone that is not in your faction")
+                .fail()
+                .send(player, false);
             return 0;
         }
 
         if (selfUser.rank == User.Rank.LEADER
                 && (targetUser.rank == User.Rank.LEADER || targetUser.rank == User.Rank.OWNER)) {
             new Message("Cannot kick members with a higher of equivalent rank")
-                    .format(Formatting.RED).send(player, false);
+                .fail()
+                .send(player, false);
             return 0;
         }
 

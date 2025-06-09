@@ -262,6 +262,13 @@ public class ClaimCommand implements Command {
         }
 
         if (increase) {
+            if (claim.accessLevel.ordinal() <= user.rank.ordinal()) {
+                new Message("Cannot increase access level to higher then your rank")
+                        .fail()
+                        .send(player, false);
+                return 0;
+            }
+
             switch (claim.accessLevel) {
                 case OWNER -> {
                     new Message("Cannot increase access level as it is already at its maximum.")
@@ -273,6 +280,13 @@ public class ClaimCommand implements Command {
                 case MEMBER -> claim.accessLevel = User.Rank.COMMANDER;
             }
         } else {
+            if (claim.accessLevel.ordinal() <= user.rank.ordinal()) {
+                new Message("Cannot decrease access level from higher then your rank")
+                        .fail()
+                        .send(player, false);
+                return 0;
+            }
+
             switch (claim.accessLevel) {
                 case OWNER -> claim.accessLevel = User.Rank.LEADER;
                 case LEADER -> claim.accessLevel = User.Rank.COMMANDER;
@@ -298,7 +312,7 @@ public class ClaimCommand implements Command {
                         .then(CommandManager.argument("size", IntegerArgumentType.integer(1, 7))
                                 .requires(Requires.hasPerms("factions.claim.add.size", 0))
                                 .then(CommandManager.literal("force")
-                                        .requires(Requires.hasPerms("factions.claim.add.force", 0))
+                                        .requires(Requires.hasPerms("factions.claim.add.force", 0).and(Requires.isLeader()))
                                         .executes(context -> addForced(context,
                                                 IntegerArgumentType.getInteger(context, "size"))))
                                 .executes(this::addSize))
@@ -306,7 +320,7 @@ public class ClaimCommand implements Command {
                 .then(CommandManager.literal("list")
                         .requires(Requires.hasPerms("factions.claim.list", 0)).executes(this::list))
                 .then(CommandManager.literal("remove")
-                        .requires(Requires.hasPerms("factions.claim.remove", 0))
+                        .requires(Requires.hasPerms("factions.claim.remove", 0).and(Requires.isLeader()))
                         .then(CommandManager.argument("size", IntegerArgumentType.integer(1, 7))
                                 .requires(Requires.hasPerms("factions.claim.remove.size", 0))
                                 .executes(this::removeSize))

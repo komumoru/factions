@@ -35,7 +35,8 @@ public class WorldManager {
             int requiredPower =
                     (faction.getClaims().size() + 1) * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT;
             int maxPower = faction.getUsers().size() * FactionsMod.CONFIG.POWER.MEMBER
-                    + FactionsMod.CONFIG.POWER.BASE;
+                    + FactionsMod.CONFIG.POWER.BASE
+                    + faction.getAdminPower();
 
             if (maxPower < requiredPower) {
                 new Message("Not enough faction power to claim chunk, autoclaim toggled off").fail()

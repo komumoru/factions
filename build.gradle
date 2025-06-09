@@ -40,6 +40,8 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "me.lucko:fabric-permissions-api:${project.lucko_permissions_version}"
     modImplementation "eu.pb4:placeholder-api:${project.papi_version}"
+    include "com.flowpowered:flow-math:${project.flow_version}"
+    implementation "com.flowpowered:flow-math:${project.flow_version}"
     modCompileOnly "us.dynmap:DynmapCoreAPI:${project.dynmap_api_version}"
     modCompileOnly "com.github.BlueMap-Minecraft:BlueMapAPI:${project.bluemap_api_version}"
     modCompileOnly "maven.modrinth:styled-chat:${project.styled_chat_version}"

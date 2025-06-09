@@ -88,7 +88,7 @@ public class RankCommand implements Command {
                     case COMMANDER -> user.rank = User.Rank.MEMBER;
                     case LEADER -> {
                         if (Command.getUser(player).rank == User.Rank.LEADER) {
-                            new Message("You cannot demote a fellow Co-Owner")
+                            new Message("You cannot demote a Leader")
                                     .format(Formatting.RED).send(player, false);
                             return 0;
                         }

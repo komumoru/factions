@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
 
-import io.icker.factions.FactionsMod;
 import io.icker.factions.api.events.ClaimEvents;
 import io.icker.factions.api.events.FactionEvents;
 import io.icker.factions.api.persistents.Claim;

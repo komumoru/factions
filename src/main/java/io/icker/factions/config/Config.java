@@ -14,7 +14,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
 import io.icker.factions.FactionsMod;
-import io.icker.factions.api.events.ClaimEvents.Add;
 import io.icker.factions.api.persistents.Relationship;
 import net.fabricmc.loader.api.FabricLoader;
 

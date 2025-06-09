@@ -4,7 +4,6 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 
-import io.icker.factions.api.persistents.Faction;
 import io.icker.factions.api.persistents.User;
 import io.icker.factions.util.Command;
 import io.icker.factions.util.Message;
@@ -30,7 +29,6 @@ public class KickCommand implements Command {
 
         User selfUser = Command.getUser(player);
         User targetUser = User.get(target.getUuid());
-        Faction faction = selfUser.getFaction();
 
         if (targetUser.getFaction() == null
                 || !targetUser.getFaction().equals(selfUser.getFaction())) {

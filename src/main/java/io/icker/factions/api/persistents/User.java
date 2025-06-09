@@ -8,6 +8,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
 import io.icker.factions.api.events.FactionEvents;
 import io.icker.factions.database.Database;
 import io.icker.factions.database.Field;
@@ -46,6 +47,9 @@ public class User {
 
     @Field("Sounds")
     public SoundMode sounds = SoundMode.ALL;
+
+    @Field("HomeCooldown")
+    public long homeCooldown = -1;
 
     public boolean autoclaim = false;
     public boolean bypass = false;

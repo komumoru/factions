@@ -7,6 +7,7 @@ import io.icker.factions.FactionsMod;
 import io.icker.factions.api.persistents.Claim;
 import io.icker.factions.api.persistents.Faction;
 import io.icker.factions.api.persistents.Home;
+import io.icker.factions.api.persistents.User;
 import io.icker.factions.mixin.DamageTrackerAccessor;
 import io.icker.factions.util.Command;
 import io.icker.factions.util.Message;
@@ -20,17 +21,23 @@ import net.minecraft.util.math.ChunkPos;
 
 import java.time.Instant;
 import java.util.Date;
-import java.util.HashMap;
 
 public class HomeCommand implements Command {
     private int go(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         ServerCommandSource source = context.getSource();
         ServerPlayerEntity player = source.getPlayer();
 
-        if (player == null)
-            return 0;
+        if (player == null) return 0;
 
-        Faction faction = Command.getUser(player).getFaction();
+        User user = Command.getUser(player);
+        Faction faction = user.getFaction();
+
+        if (faction == null) return 0;
+
+        return execGo(player, user, faction);
+    }
+
+    public int execGo(ServerPlayerEntity player, User user, Faction faction) {
         Home home = faction.getHome();
 
         if (home == null) {
@@ -38,8 +45,7 @@ public class HomeCommand implements Command {
             return 0;
         }
 
-        if (player.getServer() == null)
-            return 0;
+        if (player.getServer() == null) return 0;
 
         ServerWorld world = WorldUtils.getWorld(home.level);
 
@@ -53,8 +59,8 @@ public class HomeCommand implements Command {
             return 0;
         }
 
-        if (!(checkHomeCooldownPassed(home, player)))
-        {
+        if (Date.from(Instant.now()).getTime() - user.homeCooldown
+                < FactionsMod.CONFIG.HOME.HOME_WARP_COOLDOWN_SECOND) {
             new Message("Cannot warp home while on warp cooldown").fail().send(player, false);
             return 0;
         }
@@ -63,7 +69,7 @@ public class HomeCommand implements Command {
                 || player.age - ((DamageTrackerAccessor) player.getDamageTracker())
                         .getAgeOnLastDamage() > FactionsMod.CONFIG.HOME.DAMAGE_COOLDOWN) {
             player.teleport(world, home.x, home.y, home.z, home.yaw, home.pitch);
-            home.setPlayerLastWarpTime(player);
+
             new Message("Warped to faction home").send(player, false);
         } else {
             new Message("Cannot warp while in combat").fail().send(player, false);
@@ -90,20 +96,6 @@ public class HomeCommand implements Command {
         new Message("Home set to %.2f, %.2f, %.2f by %s", home.x, home.y, home.z,
                 player.getName().getString()).send(faction);
         return 1;
-    }
-
-    private static boolean checkHomeCooldownPassed(Home home, ServerPlayerEntity player)
-    {
-        HashMap<ServerPlayerEntity, Long> homeCooldownData = home.HomeCooldown;
-
-        Long playerLastWarpTime = homeCooldownData.get(player);
-        if (playerLastWarpTime == null) return true;
-
-        Long timePassedSinceLastWarp = Date.from(Instant.now()).getTime() - playerLastWarpTime;
-        Long homeCooldownInMS = (long) FactionsMod.CONFIG.HOME.HOME_WARP_COOLDOWN_SECOND * 1000;
-
-        return timePassedSinceLastWarp.compareTo(homeCooldownInMS) > 0 ||
-                timePassedSinceLastWarp.compareTo(homeCooldownInMS) == 0;
     }
 
     private static boolean checkLimitToClaim(Faction faction, ServerWorld world, BlockPos pos) {

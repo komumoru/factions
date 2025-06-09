@@ -1,8 +1,5 @@
 package io.icker.factions.util;
 
-import java.util.Objects;
-import java.util.Optional;
-import org.jetbrains.annotations.Nullable;
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -11,6 +8,11 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
+
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Objects;
+import java.util.Optional;
 
 public class WorldUtils {
     public static MinecraftServer server;
@@ -31,6 +33,10 @@ public class WorldUtils {
 
     public static boolean isReady() {
         return server != null;
+    }
+
+    public static boolean hasWorlds() {
+        return !WorldUtils.server.getWorldRegistryKeys().isEmpty();
     }
 
     public static boolean isValid(String level) {

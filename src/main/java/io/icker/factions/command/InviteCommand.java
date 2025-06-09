@@ -79,11 +79,15 @@ public class InviteCommand implements Command {
         ServerPlayerEntity player = source.getPlayer();
 
         Faction faction = Command.getUser(player).getFaction();
-        faction.invites.remove(target.getUuid());
-
-        new Message(target.getName().getString() + " is no longer invited to your faction")
-                .send(player, false);
-        return 1;
+        if (faction.invites.remove(target.getUuid())) {
+                new Message(target.getName().getString() + " is no longer invited to your faction")
+                        .send(player, false);
+                return 1;
+        } else {
+                new Message("Could not find invite for ", target.getName().getString())
+                    .send(player, false);
+            return 1;
+        }
     }
 
     public LiteralCommandNode<ServerCommandSource> getNode() {

@@ -84,9 +84,9 @@ public class InviteCommand implements Command {
                         .send(player, false);
                 return 1;
         } else {
-                new Message("Could not find invite for ", target.getName().getString())
+                new Message("Could not find invite for ", target.getName().getString()).fail()
                     .send(player, false);
-            return 1;
+            return 0;
         }
     }
 

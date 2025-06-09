@@ -1,7 +1,11 @@
 package io.icker.factions.api.persistents;
 
-import java.util.UUID;
 import io.icker.factions.database.Field;
+import net.minecraft.server.network.ServerPlayerEntity;
+import java.time.Instant;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.UUID;
 
 public class Home {
     @Field("X")
@@ -24,6 +28,9 @@ public class Home {
 
     private UUID factionID;
 
+    @Field("Home Cooldown")
+    public HashMap<ServerPlayerEntity, Long> HomeCooldown = new HashMap<>();
+
     public Home(UUID factionID, double x, double y, double z, float yaw, float pitch,
             String level) {
         this.factionID = factionID;
@@ -33,10 +40,15 @@ public class Home {
         this.yaw = yaw;
         this.pitch = pitch;
         this.level = level;
+
     }
 
-    @SuppressWarnings("unused")
     public Home() {}
+
+    public void setPlayerLastWarpTime(ServerPlayerEntity player)
+    {
+        HomeCooldown.put(player, Date.from(Instant.now()).getTime());
+    }
 
     public Faction getFaction() {
         return Faction.get(factionID);

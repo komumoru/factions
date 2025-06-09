@@ -18,6 +18,10 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 
+import java.time.Instant;
+import java.util.Date;
+import java.util.HashMap;
+
 public class HomeCommand implements Command {
     private int go(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         ServerCommandSource source = context.getSource();
@@ -49,18 +53,17 @@ public class HomeCommand implements Command {
             return 0;
         }
 
+        if (!(checkHomeCooldownPassed(home, player)))
+        {
+            new Message("Cannot warp home while on warp cooldown").fail().send(player, false);
+            return 0;
+        }
+
         if (((DamageTrackerAccessor) player.getDamageTracker()).getAgeOnLastDamage() == 0
                 || player.age - ((DamageTrackerAccessor) player.getDamageTracker())
-                        .getAgeOnLastDamage() > FactionsMod.CONFIG.HOME.DAMAGE_COOLDOWN) { // damageRecord
-                                                                                           // ==
-                                                                                           // null
-                                                                                           // ||
-                                                                                           // player.age
-                                                                                           // -
-                                                                                           // damageRecord.getEntityAge()
-                                                                                           // >
-                                                                                           // FactionsMod.CONFIG.HOME.DAMAGE_COOLDOWN
+                        .getAgeOnLastDamage() > FactionsMod.CONFIG.HOME.DAMAGE_COOLDOWN) {
             player.teleport(world, home.x, home.y, home.z, home.yaw, home.pitch);
+            home.setPlayerLastWarpTime(player);
             new Message("Warped to faction home").send(player, false);
         } else {
             new Message("Cannot warp while in combat").fail().send(player, false);
@@ -87,6 +90,20 @@ public class HomeCommand implements Command {
         new Message("Home set to %.2f, %.2f, %.2f by %s", home.x, home.y, home.z,
                 player.getName().getString()).send(faction);
         return 1;
+    }
+
+    private static boolean checkHomeCooldownPassed(Home home, ServerPlayerEntity player)
+    {
+        HashMap<ServerPlayerEntity, Long> homeCooldownData = home.HomeCooldown;
+
+        Long playerLastWarpTime = homeCooldownData.get(player);
+        if (playerLastWarpTime == null) return true;
+
+        Long timePassedSinceLastWarp = Date.from(Instant.now()).getTime() - playerLastWarpTime;
+        Long homeCooldownInMS = (long) FactionsMod.CONFIG.HOME.HOME_WARP_COOLDOWN_SECOND * 1000;
+
+        return timePassedSinceLastWarp.compareTo(homeCooldownInMS) > 0 ||
+                timePassedSinceLastWarp.compareTo(homeCooldownInMS) == 0;
     }
 
     private static boolean checkLimitToClaim(Faction faction, ServerWorld world, BlockPos pos) {

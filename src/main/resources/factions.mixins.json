@@ -13,8 +13,7 @@
         "PlayerManagerMixin",
         "ServerPlayerEntityMixin",
         "ServerPlayerInteractionManagerMixin",
-        "ServerPlayNetworkHandlerMixin",
-        "ExplosionBehaviorMixin"
+        "ServerPlayNetworkHandlerMixin"
     ],
     "injectors": {
         "defaultRequire": 1

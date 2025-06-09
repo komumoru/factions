@@ -40,8 +40,8 @@ import net.minecraft.world.World;
 public class InteractionManager {
     public static void register() {
         PlayerBlockBreakEvents.BEFORE.register(InteractionManager::onBreakBlock);
-        PlayerEvents.EXPLODE_BLOCK.register(InteractionManager::onExplodeBlock);
-        PlayerEvents.EXPLODE_DAMAGE.register(InteractionManager::onExplodeDamage);
+        // PlayerEvents.EXPLODE_BLOCK.register(InteractionManager::onExplodeBlock);
+        // PlayerEvents.EXPLODE_DAMAGE.register(InteractionManager::onExplodeDamage);
         UseBlockCallback.EVENT.register(InteractionManager::onUseBlock);
         UseItemCallback.EVENT.register(InteractionManager::onUseBucket);
         AttackEntityCallback.EVENT.register(InteractionManager::onAttackEntity);
@@ -61,75 +61,75 @@ public class InteractionManager {
         return !result;
     }
 
-    private static ActionResult onExplodeBlock(Explosion explosion, BlockView world, BlockPos pos, BlockState state) {
-        Entity causingEntity = explosion.getCausingEntity();
-        World actualWorld = causingEntity != null ? causingEntity.getWorld() : null;
+    // private static ActionResult onExplodeBlock(Explosion explosion, BlockView world, BlockPos pos, BlockState state) {
+    //     Entity causingEntity = explosion.getCausingEntity();
+    //     World actualWorld = causingEntity != null ? causingEntity.getWorld() : null;
         
-        if (explosion.getCausingEntity() != null && explosion.getCausingEntity() instanceof PlayerEntity) {
-            ActionResult result =
-                    checkPermissions((PlayerEntity) explosion.getCausingEntity(), pos, actualWorld, Permissions.BREAK_BLOCKS);
-            if (result == ActionResult.FAIL) {
-                InteractionsUtil.warn((PlayerEntity) explosion.getCausingEntity(), InteractionsUtilActions.BREAK_BLOCKS);
-            }
-            return result;
-        } else {
-            if (!FactionsMod.CONFIG.BLOCK_TNT) return ActionResult.PASS;
+    //     if (explosion.getCausingEntity() != null && explosion.getCausingEntity() instanceof PlayerEntity) {
+    //         ActionResult result =
+    //                 checkPermissions((PlayerEntity) explosion.getCausingEntity(), pos, actualWorld, Permissions.BREAK_BLOCKS);
+    //         if (result == ActionResult.FAIL) {
+    //             InteractionsUtil.warn((PlayerEntity) explosion.getCausingEntity(), InteractionsUtilActions.BREAK_BLOCKS);
+    //         }
+    //         return result;
+    //     } else {
+    //         if (!FactionsMod.CONFIG.BLOCK_TNT) return ActionResult.PASS;
 
-            String dimension = actualWorld.getRegistryKey().getValue().toString();
-            ChunkPos chunkPosition = actualWorld.getChunk(pos).getPos();
+    //         String dimension = actualWorld.getRegistryKey().getValue().toString();
+    //         ChunkPos chunkPosition = actualWorld.getChunk(pos).getPos();
 
-            Claim claim = Claim.get(chunkPosition.x, chunkPosition.z, dimension);
-            if (claim == null) return ActionResult.PASS;
+    //         Claim claim = Claim.get(chunkPosition.x, chunkPosition.z, dimension);
+    //         if (claim == null) return ActionResult.PASS;
 
-            Faction claimFaction = claim.getFaction();
+    //         Faction claimFaction = claim.getFaction();
 
-            if (claimFaction.getClaims().size() * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT
-                    > claimFaction.getPower()) {
-                return ActionResult.PASS;
-            }
+    //         if (claimFaction.getClaims().size() * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT
+    //                 > claimFaction.getPower()) {
+    //             return ActionResult.PASS;
+    //         }
 
-            if (claimFaction.guest_permissions.contains(Permissions.BREAK_BLOCKS)) {
-                return ActionResult.PASS;
-            }
+    //         if (claimFaction.guest_permissions.contains(Permissions.BREAK_BLOCKS)) {
+    //             return ActionResult.PASS;
+    //         }
 
-            return ActionResult.FAIL;
-        }
-    }
+    //         return ActionResult.FAIL;
+    //     }
+    // }
 
-    private static ActionResult onExplodeDamage(Explosion explosion, Entity entity) {
-        Entity causingEntity = explosion.getCausingEntity();
-        World actualWorld = causingEntity != null ? causingEntity.getWorld() : null;
+    // private static ActionResult onExplodeDamage(Explosion explosion, Entity entity) {
+    //     Entity causingEntity = explosion.getCausingEntity();
+    //     World actualWorld = causingEntity != null ? causingEntity.getWorld() : null;
 
-        if (explosion.getCausingEntity() != null && explosion.getCausingEntity() instanceof PlayerEntity) {
-            ActionResult result =
-                    checkPermissions((PlayerEntity) explosion.getCausingEntity(), entity.getBlockPos(), actualWorld, Permissions.ATTACK_ENTITIES);
-            if (result == ActionResult.FAIL) {
-                InteractionsUtil.warn((PlayerEntity) explosion.getCausingEntity(), InteractionsUtilActions.BREAK_BLOCKS);
-            }
-            return result;
-        } else {
-            if (!FactionsMod.CONFIG.BLOCK_TNT) return ActionResult.PASS;
+    //     if (explosion.getCausingEntity() != null && explosion.getCausingEntity() instanceof PlayerEntity) {
+    //         ActionResult result =
+    //                 checkPermissions((PlayerEntity) explosion.getCausingEntity(), entity.getBlockPos(), actualWorld, Permissions.ATTACK_ENTITIES);
+    //         if (result == ActionResult.FAIL) {
+    //             InteractionsUtil.warn((PlayerEntity) explosion.getCausingEntity(), InteractionsUtilActions.BREAK_BLOCKS);
+    //         }
+    //         return result;
+    //     } else {
+    //         if (!FactionsMod.CONFIG.BLOCK_TNT) return ActionResult.PASS;
 
-            String dimension = actualWorld.getRegistryKey().getValue().toString();
-            ChunkPos chunkPosition = actualWorld.getChunk(entity.getBlockPos()).getPos();
+    //         String dimension = actualWorld.getRegistryKey().getValue().toString();
+    //         ChunkPos chunkPosition = actualWorld.getChunk(entity.getBlockPos()).getPos();
 
-            Claim claim = Claim.get(chunkPosition.x, chunkPosition.z, dimension);
-            if (claim == null) return ActionResult.PASS;
+    //         Claim claim = Claim.get(chunkPosition.x, chunkPosition.z, dimension);
+    //         if (claim == null) return ActionResult.PASS;
 
-            Faction claimFaction = claim.getFaction();
+    //         Faction claimFaction = claim.getFaction();
 
-            if (claimFaction.getClaims().size() * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT
-                    > claimFaction.getPower()) {
-                return ActionResult.PASS;
-            }
+    //         if (claimFaction.getClaims().size() * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT
+    //                 > claimFaction.getPower()) {
+    //             return ActionResult.PASS;
+    //         }
 
-            if (claimFaction.guest_permissions.contains(Permissions.ATTACK_ENTITIES)) {
-                return ActionResult.PASS;
-            }
+    //         if (claimFaction.guest_permissions.contains(Permissions.ATTACK_ENTITIES)) {
+    //             return ActionResult.PASS;
+    //         }
 
-            return ActionResult.FAIL;
-        }
-    }
+    //         return ActionResult.FAIL;
+    //     }
+    // }
 
     private static ActionResult onUseBlock(PlayerEntity player, World world, Hand hand,
             BlockHitResult hitResult) {

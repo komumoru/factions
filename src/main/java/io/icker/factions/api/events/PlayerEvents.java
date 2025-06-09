@@ -48,33 +48,33 @@ public class PlayerEvents {
                                 return ActionResult.PASS;
                             });
 
-    public static final Event<ExplodeBlock> EXPLODE_BLOCK =
-            EventFactory.createArrayBacked(
-                    ExplodeBlock.class,
-                    callbacks ->
-                            (explosion, world, pos, state) -> {
-                                for (ExplodeBlock callback : callbacks) {
-                                    ActionResult result = callback.onExplodeBlock(explosion, world, pos, state);
-                                    if (result != ActionResult.PASS) {
-                                        return result;
-                                    }
-                                }
-                                return ActionResult.PASS;
-                            });
+    // public static final Event<ExplodeBlock> EXPLODE_BLOCK =
+    //         EventFactory.createArrayBacked(
+    //                 ExplodeBlock.class,
+    //                 callbacks ->
+    //                         (explosion, world, pos, state) -> {
+    //                             for (ExplodeBlock callback : callbacks) {
+    //                                 ActionResult result = callback.onExplodeBlock(explosion, world, pos, state);
+    //                                 if (result != ActionResult.PASS) {
+    //                                     return result;
+    //                                 }
+    //                             }
+    //                             return ActionResult.PASS;
+    //                         });
 
-    public static final Event<ExplodeDamage> EXPLODE_DAMAGE =
-            EventFactory.createArrayBacked(
-                    ExplodeDamage.class,
-                    callbacks ->
-                            (explosion, entity) -> {
-                                for (ExplodeDamage callback : callbacks) {
-                                    ActionResult result = callback.onExplodeDamage(explosion, entity);
-                                    if (result != ActionResult.PASS) {
-                                        return result;
-                                    }
-                                }
-                                return ActionResult.PASS;
-                            });
+    // public static final Event<ExplodeDamage> EXPLODE_DAMAGE =
+    //         EventFactory.createArrayBacked(
+    //                 ExplodeDamage.class,
+    //                 callbacks ->
+    //                         (explosion, entity) -> {
+    //                             for (ExplodeDamage callback : callbacks) {
+    //                                 ActionResult result = callback.onExplodeDamage(explosion, entity);
+    //                                 if (result != ActionResult.PASS) {
+    //                                     return result;
+    //                                 }
+    //                             }
+    //                             return ActionResult.PASS;
+    //                         });
 
     /**
      * Called when a player tries to use a block that has an inventory (uses the locking mechanism)
@@ -167,15 +167,15 @@ public class PlayerEvents {
         ActionResult onPlaceBlock(ItemUsageContext context);
     }
 
-    @FunctionalInterface
-    public interface ExplodeBlock {
-        ActionResult onExplodeBlock(Explosion explosion, BlockView world, BlockPos pos, BlockState state);
-    }
+    // @FunctionalInterface
+    // public interface ExplodeBlock {
+    //     ActionResult onExplodeBlock(Explosion explosion, BlockView world, BlockPos pos, BlockState state);
+    // }
 
-    @FunctionalInterface
-    public interface ExplodeDamage {
-        ActionResult onExplodeDamage(Explosion explosion, Entity entity);
-    }
+    // @FunctionalInterface
+    // public interface ExplodeDamage {
+    //     ActionResult onExplodeDamage(Explosion explosion, Entity entity);
+    // }
 
     @FunctionalInterface
     public interface UseInventory {

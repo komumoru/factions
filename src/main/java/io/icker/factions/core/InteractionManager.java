@@ -6,8 +6,10 @@ import io.icker.factions.api.persistents.Claim;
 import io.icker.factions.api.persistents.Faction;
 import io.icker.factions.api.persistents.Relationship.Permissions;
 import io.icker.factions.api.persistents.User;
+import io.icker.factions.core.InteractionsUtil.InteractionsUtilActions;
 import io.icker.factions.mixin.BucketItemAccessor;
 import io.icker.factions.mixin.ItemInvoker;
+
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
@@ -29,13 +31,17 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.BlockView;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.RaycastContext.FluidHandling;
+import net.minecraft.world.explosion.Explosion;
 import net.minecraft.world.World;
 
 public class InteractionManager {
     public static void register() {
         PlayerBlockBreakEvents.BEFORE.register(InteractionManager::onBreakBlock);
+        PlayerEvents.EXPLODE_BLOCK.register(InteractionManager::onExplodeBlock);
+        PlayerEvents.EXPLODE_DAMAGE.register(InteractionManager::onExplodeDamage);
         UseBlockCallback.EVENT.register(InteractionManager::onUseBlock);
         UseItemCallback.EVENT.register(InteractionManager::onUseBucket);
         AttackEntityCallback.EVENT.register(InteractionManager::onAttackEntity);
@@ -50,9 +56,79 @@ public class InteractionManager {
         boolean result =
                 checkPermissions(player, pos, world, Permissions.BREAK_BLOCKS) == ActionResult.FAIL;
         if (result) {
-            InteractionsUtil.warn(player, "break blocks");
+            InteractionsUtil.warn(player, InteractionsUtilActions.BREAK_BLOCKS);
         }
         return !result;
+    }
+
+    private static ActionResult onExplodeBlock(Explosion explosion, BlockView world, BlockPos pos, BlockState state) {
+        Entity causingEntity = explosion.getCausingEntity();
+        World actualWorld = causingEntity != null ? causingEntity.getWorld() : null;
+        
+        if (explosion.getCausingEntity() != null && explosion.getCausingEntity() instanceof PlayerEntity) {
+            ActionResult result =
+                    checkPermissions((PlayerEntity) explosion.getCausingEntity(), pos, actualWorld, Permissions.BREAK_BLOCKS);
+            if (result == ActionResult.FAIL) {
+                InteractionsUtil.warn((PlayerEntity) explosion.getCausingEntity(), InteractionsUtilActions.BREAK_BLOCKS);
+            }
+            return result;
+        } else {
+            if (!FactionsMod.CONFIG.BLOCK_TNT) return ActionResult.PASS;
+
+            String dimension = actualWorld.getRegistryKey().getValue().toString();
+            ChunkPos chunkPosition = actualWorld.getChunk(pos).getPos();
+
+            Claim claim = Claim.get(chunkPosition.x, chunkPosition.z, dimension);
+            if (claim == null) return ActionResult.PASS;
+
+            Faction claimFaction = claim.getFaction();
+
+            if (claimFaction.getClaims().size() * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT
+                    > claimFaction.getPower()) {
+                return ActionResult.PASS;
+            }
+
+            if (claimFaction.guest_permissions.contains(Permissions.BREAK_BLOCKS)) {
+                return ActionResult.PASS;
+            }
+
+            return ActionResult.FAIL;
+        }
+    }
+
+    private static ActionResult onExplodeDamage(Explosion explosion, Entity entity) {
+        Entity causingEntity = explosion.getCausingEntity();
+        World actualWorld = causingEntity != null ? causingEntity.getWorld() : null;
+
+        if (explosion.getCausingEntity() != null && explosion.getCausingEntity() instanceof PlayerEntity) {
+            ActionResult result =
+                    checkPermissions((PlayerEntity) explosion.getCausingEntity(), entity.getBlockPos(), actualWorld, Permissions.ATTACK_ENTITIES);
+            if (result == ActionResult.FAIL) {
+                InteractionsUtil.warn((PlayerEntity) explosion.getCausingEntity(), InteractionsUtilActions.BREAK_BLOCKS);
+            }
+            return result;
+        } else {
+            if (!FactionsMod.CONFIG.BLOCK_TNT) return ActionResult.PASS;
+
+            String dimension = actualWorld.getRegistryKey().getValue().toString();
+            ChunkPos chunkPosition = actualWorld.getChunk(entity.getBlockPos()).getPos();
+
+            Claim claim = Claim.get(chunkPosition.x, chunkPosition.z, dimension);
+            if (claim == null) return ActionResult.PASS;
+
+            Faction claimFaction = claim.getFaction();
+
+            if (claimFaction.getClaims().size() * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT
+                    > claimFaction.getPower()) {
+                return ActionResult.PASS;
+            }
+
+            if (claimFaction.guest_permissions.contains(Permissions.ATTACK_ENTITIES)) {
+                return ActionResult.PASS;
+            }
+
+            return ActionResult.FAIL;
+        }
     }
 
     private static ActionResult onUseBlock(PlayerEntity player, World world, Hand hand,
@@ -61,7 +137,7 @@ public class InteractionManager {
 
         BlockPos hitPos = hitResult.getBlockPos();
         if (checkPermissions(player, hitPos, world, Permissions.USE_BLOCKS) == ActionResult.FAIL) {
-            InteractionsUtil.warn(player, "use blocks");
+            InteractionsUtil.warn(player, InteractionsUtilActions.USE_BLOCKS);
             InteractionsUtil.sync(player, stack, hand);
             return ActionResult.FAIL;
         }
@@ -69,7 +145,7 @@ public class InteractionManager {
         BlockPos placePos = hitPos.add(hitResult.getSide().getVector());
         if (checkPermissions(player, placePos, world,
                 Permissions.USE_BLOCKS) == ActionResult.FAIL) {
-            InteractionsUtil.warn(player, "use blocks");
+            InteractionsUtil.warn(player, InteractionsUtilActions.USE_BLOCKS);
             InteractionsUtil.sync(player, stack, hand);
             return ActionResult.FAIL;
         }
@@ -80,7 +156,7 @@ public class InteractionManager {
     private static ActionResult onPlaceBlock(ItemUsageContext context) {
         if (checkPermissions(context.getPlayer(), context.getBlockPos(), context.getWorld(),
                 Permissions.PLACE_BLOCKS) == ActionResult.FAIL) {
-            InteractionsUtil.warn(context.getPlayer(), "place blocks");
+            InteractionsUtil.warn(context.getPlayer(), InteractionsUtilActions.PLACE_BLOCKS);
             InteractionsUtil.sync(context.getPlayer(), context.getStack(), context.getHand());
             return ActionResult.FAIL;
         }
@@ -96,7 +172,7 @@ public class InteractionManager {
             ActionResult playerResult =
                     checkPermissions(player, player.getBlockPos(), world, Permissions.PLACE_BLOCKS);
             if (playerResult == ActionResult.FAIL) {
-                InteractionsUtil.warn(player, "pick up/place liquids");
+                InteractionsUtil.warn(player, InteractionsUtilActions.PLACE_OR_PICKUP_LIQUIDS);
                 InteractionsUtil.sync(player, player.getStackInHand(hand), hand);
                 return TypedActionResult.fail(player.getStackInHand(hand));
             }
@@ -112,7 +188,7 @@ public class InteractionManager {
                 BlockPos raycastPos = raycastResult.getBlockPos();
                 if (checkPermissions(player, raycastPos, world,
                         Permissions.PLACE_BLOCKS) == ActionResult.FAIL) {
-                    InteractionsUtil.warn(player, "pick up/place liquids");
+                    InteractionsUtil.warn(player, InteractionsUtilActions.PLACE_OR_PICKUP_LIQUIDS);
                     InteractionsUtil.sync(player, player.getStackInHand(hand), hand);
                     return TypedActionResult.fail(player.getStackInHand(hand));
                 }
@@ -120,7 +196,7 @@ public class InteractionManager {
                 BlockPos placePos = raycastPos.add(raycastResult.getSide().getVector());
                 if (checkPermissions(player, placePos, world,
                         Permissions.PLACE_BLOCKS) == ActionResult.FAIL) {
-                    InteractionsUtil.warn(player, "pick up/place liquids");
+                    InteractionsUtil.warn(player, InteractionsUtilActions.PLACE_OR_PICKUP_LIQUIDS);
                     InteractionsUtil.sync(player, player.getStackInHand(hand), hand);
                     return TypedActionResult.fail(player.getStackInHand(hand));
                 }
@@ -134,7 +210,7 @@ public class InteractionManager {
             Entity entity, EntityHitResult hitResult) {
         if (entity != null && checkPermissions(player, entity.getBlockPos(), world,
                 Permissions.ATTACK_ENTITIES) == ActionResult.FAIL) {
-            InteractionsUtil.warn(player, "attack entities");
+            InteractionsUtil.warn(player, InteractionsUtilActions.ATTACK_ENTITIES);
             return ActionResult.FAIL;
         }
 
@@ -150,7 +226,7 @@ public class InteractionManager {
         }
 
         if (checkPermissions(player, pos, world, Permissions.USE_ENTITIES) == ActionResult.FAIL) {
-            InteractionsUtil.warn(player, "use entities");
+            InteractionsUtil.warn(player, InteractionsUtilActions.USE_ENTITIES);
             return ActionResult.FAIL;
         }
 
@@ -160,7 +236,7 @@ public class InteractionManager {
     private static ActionResult onUseInventory(PlayerEntity player, BlockPos pos, World world) {
         if (checkPermissions(player, pos, world,
                 Permissions.USE_INVENTORIES) == ActionResult.FAIL) {
-            InteractionsUtil.warn(player, "use inventories");
+            InteractionsUtil.warn(player, InteractionsUtilActions.USE_INVENTORY);
             return ActionResult.FAIL;
         }
 

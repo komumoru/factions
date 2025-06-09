@@ -14,6 +14,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
 import io.icker.factions.FactionsMod;
+import io.icker.factions.api.events.ClaimEvents.Add;
 import io.icker.factions.api.persistents.Relationship;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -58,6 +59,9 @@ public class Config {
 
     @SerializedName("version")
     public int VERSION = REQUIRED_VERSION;
+
+    @SerializedName("blockTNT")
+    public boolean BLOCK_TNT = false;
 
     @SerializedName("power")
     public PowerConfig POWER = new PowerConfig();

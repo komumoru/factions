@@ -36,6 +36,7 @@ public class BlueMapWrapper {
     public BlueMapWrapper() {
         BlueMapAPI.onEnable(
                 (api) -> {
+                    markerSets.clear();
                     this.api = api;
                     FactionsMod.LOGGER.info("Factions markers for Bluemap enabled");
                     generateMarkers();

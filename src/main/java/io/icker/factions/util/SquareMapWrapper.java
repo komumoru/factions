@@ -50,11 +50,12 @@ public class SquareMapWrapper {
                     generateMarkers();
                 });
 
-        FactionEvents.SET_HOME.register(this::setHome);
+        FactionEvents.SET_HOME.register((faction, home) -> generateMarkers());
         FactionEvents.MODIFY.register(faction -> generateMarkers());
         FactionEvents.MEMBER_JOIN.register((faction, user) -> generateMarkers());
         FactionEvents.MEMBER_LEAVE.register((faction, user) -> generateMarkers());
         FactionEvents.POWER_CHANGE.register((faction, oldPower) -> generateMarkers());
+        FactionEvents.DISBAND.register((faction) -> generateMarkers());
     }
 
     private void generateMarkers() {
@@ -109,7 +110,7 @@ public class SquareMapWrapper {
                     }
 
                     Marker marker =
-                            Marker.polygon(points.remove(1), points)
+                            Marker.polygon(points.remove(0), points)
                                     .markerOptions(
                                             MarkerOptions.builder()
                                                     .fillColor(

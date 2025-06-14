@@ -278,6 +278,8 @@ public class ClaimCommand implements Command {
                 case LEADER -> claim.accessLevel = User.Rank.OWNER;
                 case COMMANDER -> claim.accessLevel = User.Rank.LEADER;
                 case MEMBER -> claim.accessLevel = User.Rank.COMMANDER;
+                case GUEST -> throw new UnsupportedOperationException("Unimplemented case: " + claim.accessLevel);
+                default -> throw new IllegalArgumentException("Unexpected value: " + claim.accessLevel);
             }
         } else {
             if (claim.accessLevel.ordinal() <= user.rank.ordinal()) {
@@ -296,6 +298,8 @@ public class ClaimCommand implements Command {
                             .fail().send(player, false);
                     return 0;
                 }
+                case GUEST -> throw new UnsupportedOperationException("Unimplemented case: " + claim.accessLevel);
+                default -> throw new IllegalArgumentException("Unexpected value: " + claim.accessLevel);
             }
         }
 

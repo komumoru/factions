@@ -19,7 +19,7 @@ public class WorldManager {
     }
 
     private static void onMobSpawnAttempt() {
-        // TODO Implement this
+        // TO DO Implement this
     }
 
     private static void onMove(ServerPlayerEntity player) {

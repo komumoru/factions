@@ -63,7 +63,6 @@ public class User {
 
     public User() {}
 
-    @SuppressWarnings("unused")
     public String getKey() {
         return id.toString();
     }

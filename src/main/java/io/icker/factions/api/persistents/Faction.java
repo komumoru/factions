@@ -76,10 +76,8 @@ public class Faction {
         this.power = power;
     }
 
-    @SuppressWarnings("unused")
     public Faction() {}
 
-    @SuppressWarnings("unused")
     public String getKey() {
         return id.toString();
     }
@@ -102,7 +100,6 @@ public class Faction {
         return STORE.values();
     }
 
-    @SuppressWarnings("unused")
     public static List<Faction> allBut(UUID id) {
         return STORE.values().stream().filter(f -> f.id != id).toList();
     }
@@ -305,7 +302,7 @@ public class Faction {
         Database.save(Faction.class, STORE.values().stream().toList());
     }
 
-    // TODO(samu): import per-player power patch
+    // TO DO(samu): import per-player power patch
     public int calculateMaxPower() {
         return FactionsMod.CONFIG.POWER.BASE
                 + (getUsers().size() * FactionsMod.CONFIG.POWER.MEMBER)

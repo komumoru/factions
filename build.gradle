@@ -12,6 +12,7 @@ group = project.maven_group
 
 repositories {
     maven { url "https://jitpack.io" }
+    maven { url 'https://repo.bluecolored.de/releases' }
     maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
     maven { url "https://repo.mikeprimm.com/" }
     maven { url "https://maven.nucleoid.xyz/" }
@@ -43,7 +44,7 @@ dependencies {
     include "com.flowpowered:flow-math:${project.flow_version}"
     implementation "com.flowpowered:flow-math:${project.flow_version}"
     modCompileOnly "us.dynmap:DynmapCoreAPI:${project.dynmap_api_version}"
-    modCompileOnly "com.github.BlueMap-Minecraft:BlueMapAPI:${project.bluemap_api_version}"
+    modCompileOnly "de.bluecolored.bluemap:BlueMapAPI:${project.bluemap_api_version}"
     modCompileOnly "maven.modrinth:styled-chat:${project.styled_chat_version}"
     modCompileOnly "xyz.jpenilla:squaremap-api:${project.squaremap_api_version}"
 }

@@ -5,7 +5,6 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 
 import io.icker.factions.FactionsMod;
-import io.icker.factions.api.events.ClaimEvents.Add;
 import io.icker.factions.api.persistents.Faction;
 import io.icker.factions.api.persistents.User;
 

@@ -29,6 +29,5 @@ public class Relationship {
         this.status = status;
     }
 
-    @SuppressWarnings("unused")
     public Relationship() {}
 }

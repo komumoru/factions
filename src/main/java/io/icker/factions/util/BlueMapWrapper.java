@@ -5,10 +5,10 @@ import com.flowpowered.math.vector.Vector2i;
 
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
+import de.bluecolored.bluemap.api.markers.ExtrudeMarker;
 import de.bluecolored.bluemap.api.markers.Marker;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
-import de.bluecolored.bluemap.api.markers.POIMarker;
-import de.bluecolored.bluemap.api.markers.ExtrudeMarker;
+import de.bluecolored.bluemap.api.markers.HtmlMarker;
 import de.bluecolored.bluemap.api.math.Color;
 import de.bluecolored.bluemap.api.math.Shape;
 
@@ -34,10 +34,12 @@ public class BlueMapWrapper {
     private boolean loadWhenReady = false;
 
     public BlueMapWrapper() {
-        BlueMapAPI.onEnable((api) -> {
-            this.api = api;
-            generateMarkers();
-        });
+        BlueMapAPI.onEnable(
+                (api) -> {
+                    this.api = api;
+                    FactionsMod.LOGGER.info("Factions markers for Bluemap enabled");
+                    generateMarkers();
+                });
 
         ClaimEvents.ADD.register(
                 (Claim claim) -> {
@@ -48,25 +50,27 @@ public class BlueMapWrapper {
                     generateMarkers();
                 });
 
-        WorldUtils.ON_READY.register(() -> {
-            if (loadWhenReady) {
-                loadWhenReady = false;
+        WorldUtils.ON_READY.register(
+                () -> {
+                    if (loadWhenReady) {
+                        loadWhenReady = false;
 
-                generateMarkers();
-            }
-        });
+                        generateMarkers();
+                    }
+                });
 
-        FactionEvents.SET_HOME.register(this::setHome);
-        FactionEvents.MODIFY.register(faction -> generateMarkers());
+        FactionEvents.SET_HOME.register((faction, home) -> generateMarkers());
+        FactionEvents.MODIFY.register((faction) -> generateMarkers());
         FactionEvents.MEMBER_JOIN.register((faction, user) -> generateMarkers());
         FactionEvents.MEMBER_LEAVE.register((faction, user) -> generateMarkers());
         FactionEvents.POWER_CHANGE.register((faction, oldPower) -> generateMarkers());
+        FactionEvents.DISBAND.register((faction) -> generateMarkers());
     }
 
     private void generateMarkers() {
         if (!WorldUtils.isReady()) {
             loadWhenReady = true;
-            FactionsMod.LOGGER.info("Server hasn't loaded, postponing dynmap marker loading");
+            FactionsMod.LOGGER.info("Server hasn't loaded, postponing bluemap marker loading");
             return;
         }
 
@@ -83,6 +87,7 @@ public class BlueMapWrapper {
             }
 
             String info = getInfo(faction);
+
             for (Map.Entry<String, Set<Vector2i>> entry :
                     ClaimGrouper.separateClaimsByLevel(faction).entrySet()) {
                 String level = entry.getKey();
@@ -125,16 +130,16 @@ public class BlueMapWrapper {
                                             (double) outlines.get(0).get(0).getX(),
                                             320,
                                             (double) outlines.get(0).get(0).getY())
-                                    .shape(shapes.remove(1), -64, 320)
+                                    .shape(shapes.remove(0), -64, 320)
                                     .holes(shapes.toArray(new Shape[0]))
                                     .fillColor(
                                             new Color(
                                                     faction.getColor().getColorValue()
-                                                            | 0x40000000))
+                                                            | 0x30000000))
                                     .lineColor(
                                             new Color(
                                                     faction.getColor().getColorValue()
-                                                            | 0xFF000000))
+                                                            | 0x70000000))
                                     .label(faction.getName())
                                     .detail(info)
                                     .build();
@@ -177,15 +182,18 @@ public class BlueMapWrapper {
         Marker marker = markerSet.get(faction.getID().toString() + "-home");
 
         if (marker == null) {
-            POIMarker homeMarker =
-                    POIMarker.builder()
-                            .position(home.x, home.y, home.z)
-                            .detail(getInfo(faction))
-                            .label(faction.getName() + "'s Home")
-                            .build();
-            markerSet.put(faction.getID().toString() + "-home", homeMarker);
+            HtmlMarker nameMarker = HtmlMarker.builder()
+                    .label(faction.getName() + "'s Home")
+                    .position(home.x, home.y, home.z)
+                    .html("<div style='line-height: 2em; font-size: 2em; color: " + faction.getColor().getName() + "; transform: translate(-50%, -50%);'>" + faction.getName() + "</div>")
+                    .anchor(0, 0)
+                    .listed(true)
+                    .minDistance(50)
+                    .maxDistance(500)
+                    .build();
+            markerSet.put(faction.getID().toString() + "-home", nameMarker);
         } else {
-            ((POIMarker) marker).setPosition(home.x, home.y, home.z);
+            ((HtmlMarker) marker).setPosition(home.x, home.y, home.z);
         }
     }
 

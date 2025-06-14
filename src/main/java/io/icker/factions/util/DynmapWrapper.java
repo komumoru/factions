@@ -73,11 +73,12 @@ public class DynmapWrapper {
                     }
                 });
 
-        FactionEvents.SET_HOME.register(this::setHome);
+        FactionEvents.SET_HOME.register((faction, home) -> generateMarkers());
         FactionEvents.MODIFY.register(faction -> updateFaction(faction));
         FactionEvents.MEMBER_JOIN.register((faction, user) -> updateFaction(faction));
         FactionEvents.MEMBER_LEAVE.register((faction, user) -> updateFaction(faction));
         FactionEvents.POWER_CHANGE.register((faction, oldPower) -> updateFaction(faction));
+        FactionEvents.DISBAND.register((faction) -> generateMarkers());
     }
 
     private void generateMarkers() {
@@ -92,6 +93,10 @@ public class DynmapWrapper {
         }
 
         for (AreaMarker marker : markerSet.getAreaMarkers()) {
+            marker.deleteMarker();
+        }
+
+        for (Marker marker : markerSet.getMarkers()) {
             marker.deleteMarker();
         }
 
@@ -131,19 +136,19 @@ public class DynmapWrapper {
                     if (outlines.size() > 1) {
                         FactionsMod.LOGGER.error(
                                 "The claim chunking algorithm used for dynmap has failed, please"
-                                    + " report this asap.");
+                                        + " report this asap.");
                     }
-                    outlines.get(1).add(outlines.get(1).get(1));
+                    outlines.get(0).add(outlines.get(0).get(0));
                     double[] x_coords =
-                            outlines.get(1).stream()
+                            outlines.get(0).stream()
                                     .mapToDouble((point) -> (double) point.getX())
                                     .toArray();
                     double[] z_coords =
-                            outlines.get(1).stream()
+                            outlines.get(0).stream()
                                     .mapToDouble((point) -> (double) point.getY())
                                     .toArray();
                     double[] y_coords =
-                            outlines.get(1).stream().mapToDouble((point) -> 320.0).toArray();
+                            outlines.get(0).stream().mapToDouble((point) -> 320.0).toArray();
 
                     PolyLineMarker marker =
                             markerSet.createPolyLineMarker(

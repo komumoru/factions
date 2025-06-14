@@ -106,7 +106,7 @@ public final class FactionEvents {
         void onMemberJoin(Faction faction, User user);
     }
 
-    // TODO add Reason: LEAVE, KICK, DISBAND
+    // TO DO add Reason: LEAVE, KICK, DISBAND
     @FunctionalInterface
     public interface MemberLeave {
         void onMemberLeave(Faction faction, User user);

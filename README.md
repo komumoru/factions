@@ -1,20 +1,32 @@
+
+<div align="center">
+
+### **###################################**
+### **YOU ARE ON THE FORK MADE BY ARONA74**
+
+This fork was made to provide lastest features and bug fixes of Factions Mod to MC 1.20.1 version.
+</div>
+
+### **FEATURES NOT INCLUDED**
+- Translations & GUI
+- Prevent Explosions in claims
+
+<div align="center">
+ 
+Please note that no support will be provided by original Factions Mod dev team, this fork is provided as is.
+
+You can post Issues and Pull requests.
+ 
+### **###################################**
+
+</div>
+
+&nbsp;
+
 <div align="center">
 
 <img alt="Factions Mod Icon" src="src/main/resources/assets/factions/icon.png">
-
-<p style="color:red;">### **YOU ARE ON THE FORK MADE BY ARONA74**
-
-This fork was made to provide lastest features and bug fixes of Factions Mod to MC 1.20.1 version.
-
-Features NOT included:
-- Translations
-- GUI
-- Prevent Explosions in claims
-
-No support will be provided by original Factions Mod dev team, this fork is provided as is.
-
-&nbsp;</p>
-
+ 
 # Factions Mod
 
 Highly customizable, lightweight and elegant factions mod for the [Fabric loader][fabric] in Minecraft 1.20.1

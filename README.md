@@ -15,7 +15,7 @@ This fork was made to provide lastest features and bug fixes of Factions Mod to 
  
 Please note that no support will be provided by original Factions Mod dev team, this fork is provided as is.
 
-You can post Issues and Pull requests.
+[You can post Issues here](https://github.com/Arona74/factions/issues).
  
 ### **###################################**
 

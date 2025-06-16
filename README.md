@@ -5,18 +5,44 @@
 ### **YOU ARE ON THE FORK MADE BY ARONA74**
 
 This fork was made to provide lastest features and bug fixes of Factions Mod to MC 1.20.1 version.
-</div>
-
-### **FEATURES NOT INCLUDED**
-- Translations & GUI
-- Prevent Explosions in claims
-
-<div align="center">
  
 Please note that no support will be provided by original Factions Mod dev team, this fork is provided as is.
 
 [You can post Issues here](https://github.com/Arona74/factions/issues).
- 
+</div>
+
+**FEATURES NOT INCLUDED**
+- Translations & GUI
+- Prevent Explosions in claims
+
+**CHANGES DONE BY ME**
+- Home marker on Bluemap use HTMLmarker instead of POImarker
+
+**CHANGES COMING FROM 2.9.0 original Factions**
+- Fix: ickerio#101
+- Feat: Bluemap integration
+- Fix: Auto run audit 4 times ickerio#102
+- Fix: Add admin power when calculating max power ickerio#103
+- Fix: claim remove all bug
+- Fix: permissions api glitch
+- Fix: Add colorless faction name placeholder
+- Change: Increase log message verbosity
+- Fix: Guest permissions
+- Feat: Add additional power per ally
+- Feat: Add squaremap integration
+- Fix: null entity in onUseEntity
+- Fix: ickerio#120 (even out map)
+- Change: Reduce commander permissions
+- Feat: Added the ability to set a wait time between each home warp
+- Feat: Set cooldown after warping and add time remaining to fail message
+- Fix: invite command not reporting failure
+- Fix: Properly send invite remove fail
+- Fix: Properly check admin power when auto claiming
+- Fix: modify and create command not restricting name length correctly
+- Fix: bug in kick command
+- Feat: Group claim chunks in bluemap/dynmap/squaremap
+- Feat/Fix: Allow kicking offline players
+
 ### **###################################**
 
 </div>

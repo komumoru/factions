@@ -6,6 +6,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.icker.factions.command.AdminCommand;
 import io.icker.factions.command.ClaimCommand;
+import io.icker.factions.command.CompatCommand;
 import io.icker.factions.command.CreateCommand;
 import io.icker.factions.command.DeclareCommand;
 import io.icker.factions.command.DisbandCommand;
@@ -87,7 +88,7 @@ public class FactionsMod implements ModInitializer {
         dispatcher.getRoot().addChild(alias);
 
         Command[] commands = new Command[] {new AdminCommand(), new SettingsCommand(),
-                new ClaimCommand(), new CreateCommand(), new DeclareCommand(), new DisbandCommand(),
+                new ClaimCommand(), new CompatCommand(), new CreateCommand(), new DeclareCommand(), new DisbandCommand(),
                 new HomeCommand(), new InfoCommand(), new InviteCommand(), new JoinCommand(),
                 new KickCommand(), new LeaveCommand(), new ListCommand(), new MapCommand(),
                 new MemberCommand(), new ModifyCommand(), new RankCommand(), new SafeCommand(),

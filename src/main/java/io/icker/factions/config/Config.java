@@ -14,6 +14,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
 import io.icker.factions.FactionsMod;
+import io.icker.factions.api.compat.compatRelationshipCheckLevel;
+import io.icker.factions.api.compat.compatRelationshipCheckType;
 import io.icker.factions.api.persistents.Relationship;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -43,17 +45,67 @@ public class Config {
             }
 
             Config config = gson.fromJson(new FileReader(file), Config.class);
+            Config defaults = new Config();
+
+            if (config.RELATIONSHIPS == null) {
+                config.RELATIONSHIPS = defaults.RELATIONSHIPS;
+            } else {
+                if (config.RELATIONSHIPS.COMPAT_RELATIONSHIP_CHECK_LEVEL == null) {
+                    config.RELATIONSHIPS.COMPAT_RELATIONSHIP_CHECK_LEVEL = defaults.RELATIONSHIPS.COMPAT_RELATIONSHIP_CHECK_LEVEL;
+                }
+                if (config.RELATIONSHIPS.COMPAT_RELATIONSHIP_CHECK_TYPE == null) {
+                    config.RELATIONSHIPS.COMPAT_RELATIONSHIP_CHECK_TYPE = defaults.RELATIONSHIPS.COMPAT_RELATIONSHIP_CHECK_TYPE;
+                }
+            }
+
+            if (config.DISPLAY == null) {
+                config.DISPLAY = defaults.DISPLAY;
+            }
+
+            if (config.SAFE == null) {
+                config.SAFE = defaults.SAFE;
+            }
+
+            if (config.HOME == null) {
+                config.HOME = defaults.HOME;
+            }
 
             if (config.VERSION != REQUIRED_VERSION) {
                 FactionsMod.LOGGER.error(String.format(
                         "Config file incompatible (requires version %d)", REQUIRED_VERSION));
             }
 
+            FileWriter writer = new FileWriter(file);
+            gson.toJson(config, writer);
+            writer.close();
+
             return config;
+
         } catch (Exception e) {
             FactionsMod.LOGGER.error("An error occurred reading the factions config file", e);
             return new Config();
         }
+    }
+
+    public static void save(Config config) {
+        try {
+            Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().serializeNulls()
+                    .registerTypeAdapter(HomeConfig.class, new Deserializer<>(HomeConfig.class))
+                    .registerTypeAdapter(PowerConfig.class, new Deserializer<>(PowerConfig.class))
+                    .registerTypeAdapter(SafeConfig.class, new Deserializer<>(SafeConfig.class))
+                    .create();
+
+            FileWriter writer = new FileWriter(file);
+            gson.toJson(config, writer);
+            writer.close();
+
+        } catch (Exception e) {
+            FactionsMod.LOGGER.error("An error occurred saving the factions config file", e);
+        }
+    }
+
+    public void save() {
+        save(this);
     }
 
     @SerializedName("version")
@@ -115,6 +167,12 @@ public class Config {
         @SerializedName("defaultGuestPermissions")
         public List<Relationship.Permissions> DEFAULT_GUEST_PERMISSIONS =
                 List.of(Relationship.Permissions.USE_BLOCKS, Relationship.Permissions.USE_ENTITIES);
+
+        @SerializedName("compatRelationshipCheckLevel")
+        public compatRelationshipCheckLevel COMPAT_RELATIONSHIP_CHECK_LEVEL = compatRelationshipCheckLevel.ENEMY;
+
+        @SerializedName("compatRelationshipCheckType")
+        public compatRelationshipCheckType COMPAT_RELATIONSHIP_CHECK_TYPE = compatRelationshipCheckType.ONE_SIDED;
     }
 
     public static class Deserializer<T> implements JsonDeserializer<T> {

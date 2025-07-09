@@ -62,14 +62,6 @@ public class Config {
                 config.DISPLAY = defaults.DISPLAY;
             }
 
-            if (config.SAFE == null) {
-                config.SAFE = defaults.SAFE;
-            }
-
-            if (config.HOME == null) {
-                config.HOME = defaults.HOME;
-            }
-
             if (config.VERSION != REQUIRED_VERSION) {
                 FactionsMod.LOGGER.error(String.format(
                         "Config file incompatible (requires version %d)", REQUIRED_VERSION));

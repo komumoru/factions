@@ -78,7 +78,7 @@ public class KickCommand implements Command {
                     .send(targetPlayer, false);
         }
 
-        new Message("Kicked %s", profile.map((found_profile) -> found_profile.getName())
+        new Message("Kicked %s", profile.map(GameProfile::getName)
                                         .orElse("unknown")).send(player, false);
 
         return 1;
@@ -90,7 +90,7 @@ public class KickCommand implements Command {
                     Requires.multiple(Requires.isLeader(),
                         Requires.hasPerms("factions.kick", 0)))
                 .then(
-                    CommandManager.argument("player", EntityArgumentType.player())
+                    CommandManager.argument("player", StringArgumentType.string())
                         .suggests(Suggests.allPlayersInYourFactionButYou())
                         .executes(this::run))
                 .build();

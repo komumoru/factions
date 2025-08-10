@@ -102,7 +102,7 @@ public class DynmapWrapper {
 
         for (Faction faction : Faction.all()) {
             Home home = faction.getHome();
-            if (home != null) {
+            if (home != null && FactionsMod.CONFIG.HOME != null) {
                 setHome(faction, home);
             }
 

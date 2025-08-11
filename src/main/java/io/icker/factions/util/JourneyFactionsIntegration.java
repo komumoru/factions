@@ -1,4 +1,4 @@
-package io.icker.factions.integration;
+package io.icker.factions.util;
 
 import io.icker.factions.FactionsMod;
 import io.icker.factions.api.persistents.Claim;

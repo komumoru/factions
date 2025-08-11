@@ -31,10 +31,10 @@ import io.icker.factions.core.InteractionManager;
 import io.icker.factions.core.ServerManager;
 import io.icker.factions.core.SoundManager;
 import io.icker.factions.core.WorldManager;
-import io.icker.factions.integration.JourneyFactionsIntegration;
 import io.icker.factions.util.BlueMapWrapper;
 import io.icker.factions.util.Command;
 import io.icker.factions.util.DynmapWrapper;
+import io.icker.factions.util.JourneyFactionsIntegration;
 import io.icker.factions.util.PlaceholdersWrapper;
 import io.icker.factions.util.SquareMapWrapper;
 import io.icker.factions.util.WorldUtils;
@@ -74,7 +74,9 @@ public class FactionsMod implements ModInitializer {
         SoundManager.register();
         WorldManager.register();
 
-        JourneyFactionsIntegration.initialize();
+        if (FactionsMod.CONFIG.JOURNEYFACTIONS_INTEGRATION) {
+            JourneyFactionsIntegration.initialize();
+        }
 
         CommandRegistrationCallback.EVENT.register(FactionsMod::registerCommands);
     }

@@ -17,6 +17,7 @@ Please note that no support will be provided by original Factions Mod dev team, 
 
 **CHANGES DONE BY ME**
 - Support to display Factions territories in Journeymap using companion mod JourneyFactions (you need to enable JourneyFactionsIntegration in config file, false by default to avoid sending unwanted packets)
+- Compat API for my personal Simplyskills fork (done for "Conquest of the Bleak Isles" server, new entries in config to set relationship level for friendly fire)
 - Home marker on Bluemap use HTMLmarker instead of POImarker
 
 **CHANGES COMING FROM 2.9.0 original Factions**

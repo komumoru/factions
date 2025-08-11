@@ -16,6 +16,7 @@ Please note that no support will be provided by original Factions Mod dev team, 
 - Prevent Explosions in claims
 
 **CHANGES DONE BY ME**
+- Support to display Factions territories in Journeymap using companion mod JourneyFactions (you need to enable JourneyFactionsIntegration in config file, false by default to avoid sending unwanted packets)
 - Home marker on Bluemap use HTMLmarker instead of POImarker
 
 **CHANGES COMING FROM 2.9.0 original Factions**

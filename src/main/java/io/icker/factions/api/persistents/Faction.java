@@ -236,6 +236,26 @@ public class Faction {
     public List<Relationship> getMutualAllies() {
         return relationships.stream().filter(rel -> isMutualAllies(rel.target)).toList();
     }
+    
+    public boolean isMutualFriendly(UUID target) {
+        Relationship rel = getRelationship(target);
+        return rel.status == Relationship.Status.FRIENDLY
+                && getReverse(rel).status == Relationship.Status.FRIENDLY;
+    }
+
+    public List<Relationship> getMutualFriendly() {
+        return relationships.stream().filter(rel -> isMutualFriendly(rel.target)).toList();
+    }
+
+    public List<Relationship> getFriendlyWith() {
+        return relationships.stream().filter(rel -> rel.status == Relationship.Status.FRIENDLY)
+                .toList();
+    }
+
+    public List<Relationship> getFriendlyOf() {
+        return relationships.stream()
+                .filter(rel -> getReverse(rel).status == Relationship.Status.FRIENDLY).toList();
+    }
 
     public List<Relationship> getEnemiesWith() {
         return relationships.stream().filter(rel -> rel.status == Relationship.Status.ENEMY)
@@ -307,5 +327,10 @@ public class Faction {
         return FactionsMod.CONFIG.POWER.BASE
                 + (getUsers().size() * FactionsMod.CONFIG.POWER.MEMBER)
                 + (getMutualAllies().size() * FactionsMod.CONFIG.POWER.POWER_PER_ALLY);
+    }
+
+    public Collection<User> getRelationships() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getRelationships'");
     }
 }

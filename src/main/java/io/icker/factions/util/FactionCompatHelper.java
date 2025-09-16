@@ -1,7 +1,6 @@
 package io.icker.factions.util;
 
-import io.icker.factions.api.compat.compatRelationshipCheckLevel;
-import io.icker.factions.api.compat.compatRelationshipCheckType;
+import io.icker.factions.api.compat.compatSkillDamageProtectionfor;
 import io.icker.factions.api.persistents.Faction;
 import io.icker.factions.api.persistents.Relationship;
 import io.icker.factions.api.persistents.User;
@@ -54,12 +53,11 @@ public class FactionCompatHelper {
     // }
 
     public static boolean canDamage(ServerPlayerEntity attacker, ServerPlayerEntity target) {
-        compatRelationshipCheckLevel level = io.icker.factions.FactionsMod.CONFIG.RELATIONSHIPS.COMPAT_RELATIONSHIP_CHECK_LEVEL;
-        compatRelationshipCheckType checkType = io.icker.factions.FactionsMod.CONFIG.RELATIONSHIPS.COMPAT_RELATIONSHIP_CHECK_TYPE;
-        return canDamage(attacker, target, level, checkType);
+        compatSkillDamageProtectionfor level = io.icker.factions.FactionsMod.CONFIG.RELATIONSHIPS.COMPAT_SKILL_DAMAGE_PROTECTION_FOR;
+        return canDamage(attacker, target, level);
     }
 
-    public static boolean canDamage(ServerPlayerEntity attacker, ServerPlayerEntity target, compatRelationshipCheckLevel level, compatRelationshipCheckType checkType) {
+    public static boolean canDamage(ServerPlayerEntity attacker, ServerPlayerEntity target, compatSkillDamageProtectionfor level) {
         Faction f1 = FactionCompatHelper.getFaction(attacker);
         Faction f2 = FactionCompatHelper.getFaction(target);
 
@@ -76,13 +74,7 @@ public class FactionCompatHelper {
         Relationship r1 = f1.getRelationship(f2.getID());
         Relationship r2 = f2.getRelationship(f1.getID());
 
-        Relationship.Status relationStatus;
-
-        if (checkType == compatRelationshipCheckType.MUTUAL) {
-            relationStatus = getMutualRelation(r1, r2);
-        } else {
-            relationStatus = getWorstRelation(r1, r2);
-        }
+        Relationship.Status relationStatus = getWorstRelation(r1, r2);
 
         return isDamageAllowed(relationStatus, level);
     }
@@ -98,24 +90,22 @@ public class FactionCompatHelper {
 
         if (r1Neutral || r2Neutral) return Relationship.Status.NEUTRAL;
 
-        return Relationship.Status.ALLY;
-    }
+        boolean r1Friendly = r1 != null && r1.status == Relationship.Status.FRIENDLY;
+        boolean r2Friendly = r2 != null && r2.status == Relationship.Status.FRIENDLY;
 
-    private static Relationship.Status getMutualRelation(Relationship r1, Relationship r2) {
-        if (r1 == null || r2 == null) return Relationship.Status.NEUTRAL;
-
-        if (r1.status == Relationship.Status.ENEMY && r2.status == Relationship.Status.ENEMY) return Relationship.Status.ENEMY;
-        if (r1.status == Relationship.Status.NEUTRAL && r2.status == Relationship.Status.NEUTRAL) return Relationship.Status.NEUTRAL;
+        if (r1Friendly || r2Friendly) return Relationship.Status.FRIENDLY;
 
         return Relationship.Status.ALLY;
     }
 
-    private static boolean isDamageAllowed(Relationship.Status actualStatus, compatRelationshipCheckLevel configLevel) {
-        // ENEMY > NEUTRAL > ALLY hierarchy
+    private static boolean isDamageAllowed(Relationship.Status actualStatus, compatSkillDamageProtectionfor configLevel) {
         return switch (configLevel) {
-            case ENEMY -> actualStatus == Relationship.Status.ENEMY;
-            case NEUTRAL -> actualStatus == Relationship.Status.ENEMY || actualStatus == Relationship.Status.NEUTRAL;
-            case ALLY -> true;
+            case ALL -> true; // No protection - all damage allowed
+            case ALLY -> actualStatus != Relationship.Status.ALLY; // Allies protected
+            case FRIENDLY -> actualStatus != Relationship.Status.ALLY && 
+                                actualStatus != Relationship.Status.FRIENDLY; // Friendly+ protected
+            case NEUTRAL -> actualStatus == Relationship.Status.ENEMY; // Only enemies can fight
+            case NONE -> false; // No damage allowed
         };
     }
 }

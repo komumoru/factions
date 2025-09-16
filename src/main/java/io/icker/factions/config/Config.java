@@ -14,8 +14,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
 import io.icker.factions.FactionsMod;
-import io.icker.factions.api.compat.compatRelationshipCheckLevel;
-import io.icker.factions.api.compat.compatRelationshipCheckType;
+import io.icker.factions.api.compat.compatSkillDamageProtectionfor;
 import io.icker.factions.api.persistents.Relationship;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -50,11 +49,8 @@ public class Config {
             if (config.RELATIONSHIPS == null) {
                 config.RELATIONSHIPS = defaults.RELATIONSHIPS;
             } else {
-                if (config.RELATIONSHIPS.COMPAT_RELATIONSHIP_CHECK_LEVEL == null) {
-                    config.RELATIONSHIPS.COMPAT_RELATIONSHIP_CHECK_LEVEL = defaults.RELATIONSHIPS.COMPAT_RELATIONSHIP_CHECK_LEVEL;
-                }
-                if (config.RELATIONSHIPS.COMPAT_RELATIONSHIP_CHECK_TYPE == null) {
-                    config.RELATIONSHIPS.COMPAT_RELATIONSHIP_CHECK_TYPE = defaults.RELATIONSHIPS.COMPAT_RELATIONSHIP_CHECK_TYPE;
+                if (config.RELATIONSHIPS.COMPAT_SKILL_DAMAGE_PROTECTION_FOR == null) {
+                    config.RELATIONSHIPS.COMPAT_SKILL_DAMAGE_PROTECTION_FOR = defaults.RELATIONSHIPS.COMPAT_SKILL_DAMAGE_PROTECTION_FOR;
                 }
             }
 
@@ -163,11 +159,8 @@ public class Config {
         public List<Relationship.Permissions> DEFAULT_GUEST_PERMISSIONS =
                 List.of(Relationship.Permissions.USE_BLOCKS, Relationship.Permissions.USE_ENTITIES);
 
-        @SerializedName("compatRelationshipCheckLevel")
-        public compatRelationshipCheckLevel COMPAT_RELATIONSHIP_CHECK_LEVEL = compatRelationshipCheckLevel.ENEMY;
-
-        @SerializedName("compatRelationshipCheckType")
-        public compatRelationshipCheckType COMPAT_RELATIONSHIP_CHECK_TYPE = compatRelationshipCheckType.ONE_SIDED;
+        @SerializedName("compatSkillDamageProtectionfor")
+        public compatSkillDamageProtectionfor COMPAT_SKILL_DAMAGE_PROTECTION_FOR = compatSkillDamageProtectionfor.NEUTRAL;
     }
 
     public static class Deserializer<T> implements JsonDeserializer<T> {

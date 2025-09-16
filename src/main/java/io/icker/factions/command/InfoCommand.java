@@ -66,6 +66,11 @@ public class InfoCommand implements Command {
                 .map(fac -> fac.getColor() + fac.getName())
                 .collect(Collectors.joining(Formatting.GRAY + ", "));
 
+        String mutualFriendly = faction.getMutualFriendly().stream()
+                .map(rel -> Faction.get(rel.target))
+                .map(fac -> fac.getColor() + fac.getName())
+                .collect(Collectors.joining(Formatting.GRAY + ", "));
+
         String enemiesWith = Formatting.GRAY + faction.getEnemiesWith().stream()
                 .map(rel -> Faction.get(rel.target)).map(fac -> fac.getColor() + fac.getName())
                 .collect(Collectors.joining(Formatting.GRAY + ", "));
@@ -92,9 +97,20 @@ public class InfoCommand implements Command {
         new Message(Formatting.GREEN + "Allies (" + Formatting.WHITE
                 + faction.getMutualAllies().size() + Formatting.GREEN + "): ").add(mutualAllies)
                         .send(player, false);
+        new Message(Formatting.AQUA + "Friendly (" + Formatting.WHITE
+                + faction.getMutualFriendly().size() + Formatting.AQUA + "): ").add(mutualFriendly)
+                        .send(player, false);
         new Message(Formatting.RED + "Enemies (" + Formatting.WHITE
                 + faction.getEnemiesWith().size() + Formatting.RED + "): ").add(enemiesWith)
                         .send(player, false);
+
+        // Add compat config info
+        String compatLevel = FactionsMod.CONFIG.RELATIONSHIPS.COMPAT_SKILL_DAMAGE_PROTECTION_FOR.toString();
+        new Message(Formatting.GRAY + "Compatibility Settings:")
+                .send(player, false);
+        new Message(Formatting.GRAY + "- Skill Damage Protection for: " + Formatting.YELLOW + compatLevel )
+                .hover("Skill Damages are disabled if your faction relationship is equal or higher than current setting")
+                .send(player, false);
 
         return 1;
     }

@@ -20,6 +20,10 @@ public class DeclareCommand implements Command {
         return updateRelationship(context, Relationship.Status.ALLY);
     }
 
+    private int friendly(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        return updateRelationship(context, Relationship.Status.FRIENDLY);
+    }
+
     private int neutral(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         return updateRelationship(context, Relationship.Status.NEUTRAL);
     }
@@ -69,11 +73,12 @@ public class DeclareCommand implements Command {
 
         RelationshipEvents.NEW_DECLARATION.invoker().onNewDecleration(rel);
 
-        Message msgStatus = rel.status == Relationship.Status.ALLY
-                ? new Message("allies").format(Formatting.GREEN)
-                : rel.status == Relationship.Status.ENEMY
-                        ? new Message("enemies").format(Formatting.RED)
-                        : new Message("neutral");
+        Message msgStatus = switch (rel.status) {
+            case ALLY -> new Message("allies").format(Formatting.GREEN);
+            case FRIENDLY -> new Message("friendly").format(Formatting.AQUA);
+            case ENEMY -> new Message("enemies").format(Formatting.RED);
+            case NEUTRAL -> new Message("neutral");
+        };
 
         if (rel.status == rev.status) {
             RelationshipEvents.NEW_MUTUAL.invoker().onNewMutual(rel);
@@ -109,6 +114,10 @@ public class DeclareCommand implements Command {
                         .requires(Requires.hasPerms("factions.declare.ally", 0))
                         .then(CommandManager.argument("faction", StringArgumentType.greedyString())
                                 .suggests(Suggests.allFactions(false)).executes(this::ally)))
+                .then(CommandManager.literal("friendly")
+                        .requires(Requires.hasPerms("factions.declare.friendly", 0))
+                        .then(CommandManager.argument("faction", StringArgumentType.greedyString())
+                                .suggests(Suggests.allFactions(false)).executes(this::friendly)))
                 .then(CommandManager.literal("neutral")
                         .requires(Requires.hasPerms("factions.declare.neutral", 0))
                         .then(CommandManager.argument("faction", StringArgumentType.greedyString())
@@ -119,5 +128,4 @@ public class DeclareCommand implements Command {
                                 .suggests(Suggests.allFactions(false)).executes(this::enemy)))
                 .build();
     }
-
 }

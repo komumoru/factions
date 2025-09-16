@@ -60,25 +60,31 @@ public class FactionCompatHelper {
     }
 
     public static boolean canDamage(ServerPlayerEntity attacker, ServerPlayerEntity target, compatRelationshipCheckLevel level, compatRelationshipCheckType checkType) {
-    Faction f1 = FactionCompatHelper.getFaction(attacker);
-    Faction f2 = FactionCompatHelper.getFaction(target);
+        Faction f1 = FactionCompatHelper.getFaction(attacker);
+        Faction f2 = FactionCompatHelper.getFaction(target);
 
-    if (f1 == null || f2 == null || f1.getID().equals(f2.getID())) {
-        return false;
-    }
+        // Same faction members cannot damage each other
+        if (f1 != null && f2 != null && f1.getID().equals(f2.getID())) {
+            return false;
+        }
 
-    Relationship r1 = f1.getRelationship(f2.getID());
-    Relationship r2 = f2.getRelationship(f1.getID());
+        // If either player is factionless, treat as neutral relationship
+        if (f1 == null || f2 == null) {
+            return isDamageAllowed(Relationship.Status.NEUTRAL, level);
+        }
 
-    Relationship.Status relationStatus;
+        Relationship r1 = f1.getRelationship(f2.getID());
+        Relationship r2 = f2.getRelationship(f1.getID());
 
-    if (checkType == compatRelationshipCheckType.MUTUAL) {
-        relationStatus = getMutualRelation(r1, r2);
-    } else {
-        relationStatus = getWorstRelation(r1, r2);
-    }
+        Relationship.Status relationStatus;
 
-    return isDamageAllowed(relationStatus, level);
+        if (checkType == compatRelationshipCheckType.MUTUAL) {
+            relationStatus = getMutualRelation(r1, r2);
+        } else {
+            relationStatus = getWorstRelation(r1, r2);
+        }
+
+        return isDamageAllowed(relationStatus, level);
     }
 
     private static Relationship.Status getWorstRelation(Relationship r1, Relationship r2) {

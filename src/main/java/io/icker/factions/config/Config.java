@@ -22,7 +22,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 
 public class Config {
-    private static final int REQUIRED_VERSION = 3;
+    private static final int REQUIRED_VERSION = 4;
     private static final File file =
             FabricLoader.getInstance()
                     .getGameDir()
@@ -111,6 +111,12 @@ public class Config {
 
     @SerializedName("language")
     public String LANGUAGE = "en_us";
+
+    @SerializedName("wildernessBreakWhitelist")
+    public List<String> WILDERNESS_BREAK_WHITELIST = List.of();
+
+    @SerializedName("wildernessPlaceWhitelist")
+    public List<String> WILDERNESS_PLACE_WHITELIST = List.of();
 
     public static class DisplayConfig {
         @SerializedName("factionNameMaxLength")

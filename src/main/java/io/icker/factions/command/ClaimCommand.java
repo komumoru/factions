@@ -23,6 +23,7 @@ import net.minecraft.util.math.ChunkPos;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class ClaimCommand implements Command {
@@ -76,7 +77,15 @@ public class ClaimCommand implements Command {
 
         Faction faction = Command.getUser(player).getFaction();
         String dimension = world.getRegistryKey().getValue().toString();
-        ArrayList<ChunkPos> chunks = new ArrayList<ChunkPos>();
+        ChunkPos centerChunk = world.getChunk(player.getBlockPos()).getPos();
+        ChunkPos minCorner = new ChunkPos(centerChunk.x - size + 1, centerChunk.z - size + 1);
+        ChunkPos maxCorner = new ChunkPos(centerChunk.x + size - 1, centerChunk.z + size - 1);
+        ArrayList<ChunkPos> chunks = new ArrayList<>();
+        ArrayList<Claim> claimsToRemove = new ArrayList<>();
+        HashMap<UUID, Integer> plannedConquests = new HashMap<>();
+
+        int additionalClaims = 0;
+        int availableCapacity = Math.max(0, faction.getPower() - faction.getDemesne());
 
         for (int x = -size + 1; x < size; x++) {
             for (int y = -size + 1; y < size; y++) {
@@ -84,51 +93,125 @@ public class ClaimCommand implements Command {
                         world.getChunk(player.getBlockPos().add(x * 16, 0, y * 16)).getPos();
                 Claim existingClaim = Claim.get(chunkPos.x, chunkPos.z, dimension);
 
-                if (existingClaim != null) {
+                if (existingClaim != null && existingClaim.getFaction().equals(faction)) {
                     if (size == 1) {
-                        boolean isActorOwner = existingClaim.getFaction().equals(faction);
                         new Message(
                                         Text.translatable(
                                                 "factions.command.claim.add.fail.already_owned.single",
                                                 Text.translatable(
-                                                        "factions.command.claim.add.fail.already_owned.single."
-                                                                + (isActorOwner
-                                                                        ? "your"
-                                                                        : "another"))))
-                                .fail()
-                                .send(player, false);
-                        return 0;
-                    } else if (!existingClaim.getFaction().equals(faction)) {
-                        new Message(
-                                        Text.translatable(
-                                                "factions.command.claim.add.fail.already_owned.multiple"))
+                                                        "factions.command.claim.add.fail.already_owned.single.your")))
                                 .fail()
                                 .send(player, false);
                         return 0;
                     }
+                    continue;
                 }
 
+                if (additionalClaims >= availableCapacity) {
+                    new Message(
+                                    Text.translatable(
+                                            "factions.command.claim.add.fail.lacks_capacity."
+                                                    + (size == 1 ? "single" : "multiple")))
+                            .fail()
+                            .send(player, false);
+                    return 0;
+                }
+
+                if (existingClaim == null) {
+                    chunks.add(chunkPos);
+                    additionalClaims++;
+                    continue;
+                }
+
+                Faction owner = existingClaim.getFaction();
+                if (!faction.isAtWarWith(owner)) {
+                    new Message(
+                                    Text.translatable(
+                                            "factions.command.claim.add.fail.not_at_war",
+                                            owner.getName()))
+                            .fail()
+                            .send(player, false);
+                    return 0;
+                }
+
+                int planned = plannedConquests.getOrDefault(owner.getID(), 0);
+                if (owner.getVulnerableClaims() <= planned) {
+                    new Message(
+                                    Text.translatable(
+                                            "factions.command.claim.add.fail.no_vulnerable",
+                                            owner.getName()))
+                            .fail()
+                            .send(player, false);
+                    return 0;
+                }
+
+                plannedConquests.put(owner.getID(), planned + 1);
+                claimsToRemove.add(existingClaim);
                 chunks.add(chunkPos);
+                additionalClaims++;
             }
+        }
+
+        if (chunks.isEmpty()) {
+            new Message(
+                            Text.translatable(
+                                    "factions.command.claim.add.fail.already_owned.multiple"))
+                    .fail()
+                    .send(player, false);
+            return 0;
+        }
+
+        int minX = chunks.stream().mapToInt(chunk -> chunk.x).min().orElse(minCorner.x);
+        int minZ = chunks.stream().mapToInt(chunk -> chunk.z).min().orElse(minCorner.z);
+        int maxX = chunks.stream().mapToInt(chunk -> chunk.x).max().orElse(maxCorner.x);
+        int maxZ = chunks.stream().mapToInt(chunk -> chunk.z).max().orElse(maxCorner.z);
+
+        for (Claim claim : claimsToRemove) {
+            Faction defender = claim.getFaction();
+            if (defender != null) {
+                new Message(
+                                Text.translatable(
+                                        "factions.command.claim.add.success.conquest.defender",
+                                        claim.x,
+                                        claim.z,
+                                        faction.getName()))
+                        .send(defender);
+            }
+            claim.remove();
         }
 
         chunks.forEach(chunk -> faction.addClaim(chunk.x, chunk.z, dimension));
         if (size == 1) {
-            new Message(
-                            Text.translatable(
-                                    "factions.command.claim.add.success.single",
-                                    chunks.get(0).x,
-                                    chunks.get(0).z,
-                                    player.getName().getString()))
-                    .send(faction);
+            ChunkPos chunk = chunks.get(0);
+            if (claimsToRemove.isEmpty()) {
+                new Message(
+                                Text.translatable(
+                                        "factions.command.claim.add.success.single",
+                                        chunk.x,
+                                        chunk.z,
+                                        player.getName().getString()))
+                        .send(faction);
+            } else {
+                Claim removed = claimsToRemove.get(0);
+                new Message(
+                                Text.translatable(
+                                        "factions.command.claim.add.success.conquest.single",
+                                        chunk.x,
+                                        chunk.z,
+                                        player.getName().getString(),
+                                        removed.getFaction().getName()))
+                        .send(faction);
+            }
         } else {
             new Message(
                             Text.translatable(
-                                    "factions.command.claim.add.success.multiple",
-                                    chunks.get(0).x,
-                                    chunks.get(0).z,
-                                    chunks.get(0).x + size - 1,
-                                    chunks.get(0).z + size - 1,
+                                    claimsToRemove.isEmpty()
+                                            ? "factions.command.claim.add.success.multiple"
+                                            : "factions.command.claim.add.success.conquest.multiple",
+                                    minX,
+                                    minZ,
+                                    maxX,
+                                    maxZ,
                                     player.getName().getString()))
                     .send(faction);
         }
@@ -140,15 +223,10 @@ public class ClaimCommand implements Command {
         ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
         Faction faction = Command.getUser(player).getFaction();
 
-        int requiredPower =
-                (faction.getClaims().size() + 1) * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT;
-        int maxPower =
-                faction.getUsers().size() * FactionsMod.CONFIG.POWER.MEMBER
-                        + FactionsMod.CONFIG.POWER.BASE
-                        + faction.getAdminPower();
-
-        if (maxPower < requiredPower) {
-            new Message(Text.translatable("factions.command.claim.add.fail.lacks_power"))
+        if (faction.getPower() <= faction.getDemesne()) {
+            new Message(
+                            Text.translatable(
+                                    "factions.command.claim.add.fail.lacks_capacity.single"))
                     .fail()
                     .send(player, false);
             return 0;
@@ -162,15 +240,10 @@ public class ClaimCommand implements Command {
         ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
         Faction faction = Command.getUser(player).getFaction();
 
-        int requiredPower =
-                (faction.getClaims().size() + 1) * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT;
-        int maxPower =
-                faction.getUsers().size() * FactionsMod.CONFIG.POWER.MEMBER
-                        + FactionsMod.CONFIG.POWER.BASE
-                        + faction.getAdminPower();
-
-        if (maxPower < requiredPower) {
-            new Message(Text.translatable("factions.command.claim.add.fail.lacks_power.multiple"))
+        if (faction.getPower() <= faction.getDemesne()) {
+            new Message(
+                            Text.translatable(
+                                    "factions.command.claim.add.fail.lacks_capacity.multiple"))
                     .fail()
                     .send(player, false);
             return 0;

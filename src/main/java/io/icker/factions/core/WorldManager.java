@@ -34,14 +34,8 @@ public class WorldManager {
         Claim claim = Claim.get(chunkPos.x, chunkPos.z, dimension);
         if (user.autoclaim && claim == null) {
             Faction faction = user.getFaction();
-            int requiredPower =
-                    (faction.getClaims().size() + 1) * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT;
-            int maxPower =
-                    faction.getUsers().size() * FactionsMod.CONFIG.POWER.MEMBER
-                            + FactionsMod.CONFIG.POWER.BASE
-                            + faction.getAdminPower();
 
-            if (maxPower < requiredPower) {
+            if (faction.getPower() <= faction.getDemesne()) {
                 new Message(Text.translatable("factions.events.autoclaim.fail"))
                         .fail()
                         .send(player, false);

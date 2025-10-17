@@ -144,8 +144,8 @@ public class InfoGui extends SimpleGui {
                                 }));
 
         // Power info
-        int requiredPower = faction.getClaims().size() * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT;
         int maxPower = faction.calculateMaxPower();
+        int demesne = faction.getDemesne();
         this.setSlot(
                 2,
                 new GuiElementBuilder(Items.PLAYER_HEAD)
@@ -169,8 +169,8 @@ public class InfoGui extends SimpleGui {
                                                                 .withItalic(false)
                                                                 .withColor(Formatting.GRAY)),
                                         Text.translatable(
-                                                        "factions.gui.info.power.claims",
-                                                        Text.literal(String.valueOf(requiredPower))
+                                                        "factions.gui.info.power.demesne",
+                                                        Text.literal(String.valueOf(demesne))
                                                                 .setStyle(
                                                                         Style.EMPTY
                                                                                 .withItalic(false)

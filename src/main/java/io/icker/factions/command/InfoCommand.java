@@ -104,9 +104,8 @@ public class InfoCommand implements Command {
                                 .map(fac -> fac.getColor() + fac.getName())
                                 .collect(Collectors.joining(Formatting.GRAY + ", "));
 
-        int requiredPower = faction.getClaims().size() * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT;
-        int maxPower =
-                users.size() * FactionsMod.CONFIG.POWER.MEMBER + FactionsMod.CONFIG.POWER.BASE;
+        int demesne = faction.getDemesne();
+        int maxPower = faction.calculateMaxPower();
 
         // generate the ---
         int numDashes = 32 - faction.getName().length();
@@ -142,7 +141,7 @@ public class InfoCommand implements Command {
                         Formatting.GREEN.toString()
                                 + faction.getPower()
                                 + slash()
-                                + requiredPower
+                                + demesne
                                 + slash()
                                 + maxPower)
                 .hover(Text.translatable("factions.gui.info.power.description"))

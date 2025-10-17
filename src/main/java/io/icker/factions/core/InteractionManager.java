@@ -20,10 +20,12 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.BucketItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsageContext;
+import net.minecraft.registry.Registries;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -56,6 +58,13 @@ public class InteractionManager {
             BlockPos pos,
             BlockState state,
             BlockEntity blockEntity) {
+        if (isWilderness(world, pos)
+                && !canBypassWilderness(player)
+                && !isBlockAllowedInWilderness(state)) {
+            InteractionsUtil.warn(player, InteractionsUtilActions.BREAK_BLOCKS);
+            return false;
+        }
+
         boolean result =
                 checkPermissions(player, pos, world, Permissions.BREAK_BLOCKS) == ActionResult.FAIL;
         if (result) {
@@ -91,8 +100,7 @@ public class InteractionManager {
 
             Faction claimFaction = claim.getFaction();
 
-            if (claimFaction.getClaims().size() * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT
-                    > claimFaction.getPower()) {
+            if (claimFaction.getDemesne() > claimFaction.getPower()) {
                 return ActionResult.PASS;
             }
 
@@ -130,8 +138,7 @@ public class InteractionManager {
 
             Faction claimFaction = claim.getFaction();
 
-            if (claimFaction.getClaims().size() * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT
-                    > claimFaction.getPower()) {
+            if (claimFaction.getDemesne() > claimFaction.getPower()) {
                 return ActionResult.PASS;
             }
 
@@ -166,14 +173,30 @@ public class InteractionManager {
     }
 
     private static ActionResult onPlaceBlock(ItemUsageContext context) {
+        PlayerEntity actor = context.getPlayer();
+        if (actor == null) {
+            return ActionResult.PASS;
+        }
+
+        BlockPos targetPos = context.getBlockPos();
+        World world = context.getWorld();
+        if (!canBypassWilderness(actor)
+                && (isWilderness(world, targetPos)
+                        || isWilderness(world, targetPos.offset(context.getSide())))
+                && !isPlacementAllowedInWilderness(context)) {
+            InteractionsUtil.warn(actor, InteractionsUtilActions.PLACE_BLOCKS);
+            InteractionsUtil.sync(actor, context.getStack(), context.getHand());
+            return ActionResult.FAIL;
+        }
+
         if (checkPermissions(
-                        context.getPlayer(),
+                        actor,
                         context.getBlockPos(),
                         context.getWorld(),
                         Permissions.PLACE_BLOCKS)
                 == ActionResult.FAIL) {
-            InteractionsUtil.warn(context.getPlayer(), InteractionsUtilActions.PLACE_BLOCKS);
-            InteractionsUtil.sync(context.getPlayer(), context.getStack(), context.getHand());
+            InteractionsUtil.warn(actor, InteractionsUtilActions.PLACE_BLOCKS);
+            InteractionsUtil.sync(actor, context.getStack(), context.getHand());
             return ActionResult.FAIL;
         }
 
@@ -199,6 +222,28 @@ public class InteractionManager {
                             : RaycastContext.FluidHandling.NONE;
 
             BlockHitResult raycastResult = ItemInvoker.raycast(world, player, handling);
+
+            if (raycastResult.getType() != BlockHitResult.Type.MISS
+                    && isWilderness(world, raycastResult.getBlockPos())
+                    && !canBypassWilderness(player)) {
+                if (fluid != Fluids.EMPTY) {
+                    String fluidId = Registries.FLUID.getId(fluid).toString();
+                    if (!FactionsMod.CONFIG.WILDERNESS_PLACE_WHITELIST.contains(fluidId)) {
+                        InteractionsUtil.warn(
+                                player, InteractionsUtilActions.PLACE_OR_PICKUP_LIQUIDS);
+                        InteractionsUtil.sync(player, player.getStackInHand(hand), hand);
+                        return ActionResult.FAIL;
+                    }
+                } else {
+                    BlockState targetedState = world.getBlockState(raycastResult.getBlockPos());
+                    if (!isBlockAllowedInWilderness(targetedState)) {
+                        InteractionsUtil.warn(
+                                player, InteractionsUtilActions.PLACE_OR_PICKUP_LIQUIDS);
+                        InteractionsUtil.sync(player, player.getStackInHand(hand), hand);
+                        return ActionResult.FAIL;
+                    }
+                }
+            }
 
             if (raycastResult.getType() != BlockHitResult.Type.MISS) {
                 BlockPos raycastPos = raycastResult.getBlockPos();
@@ -304,8 +349,7 @@ public class InteractionManager {
 
         Faction claimFaction = claim.getFaction();
 
-        if (claimFaction.getClaims().size() * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT
-                > claimFaction.getPower()) {
+        if (claimFaction.getDemesne() > claimFaction.getPower()) {
             return ActionResult.PASS;
         }
 
@@ -360,5 +404,35 @@ public class InteractionManager {
                 return -2;
             }
         }
+    }
+
+    private static boolean isWilderness(World world, BlockPos pos) {
+        String dimension = world.getRegistryKey().getValue().toString();
+        ChunkPos chunkPosition = world.getChunk(pos).getPos();
+        return Claim.get(chunkPosition.x, chunkPosition.z, dimension) == null;
+    }
+
+    private static boolean canBypassWilderness(PlayerEntity player) {
+        if (player == null) return false;
+        User user = User.get(player.getUuid());
+        return player.hasPermissionLevel(FactionsMod.CONFIG.REQUIRED_BYPASS_LEVEL) && user.bypass;
+    }
+
+    private static boolean isBlockAllowedInWilderness(BlockState state) {
+        String id = Registries.BLOCK.getId(state.getBlock()).toString();
+        return FactionsMod.CONFIG.WILDERNESS_BREAK_WHITELIST.contains(id);
+    }
+
+    private static boolean isPlacementAllowedInWilderness(ItemUsageContext context) {
+        if (context == null) return false;
+        ItemStack stack = context.getStack();
+        if (stack.isEmpty()) return false;
+
+        if (stack.getItem() instanceof BlockItem blockItem) {
+            String id = Registries.BLOCK.getId(blockItem.getBlock()).toString();
+            return FactionsMod.CONFIG.WILDERNESS_PLACE_WHITELIST.contains(id);
+        }
+
+        return false;
     }
 }

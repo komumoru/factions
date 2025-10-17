@@ -206,6 +206,32 @@ public class Faction {
         return Claim.getByFaction(id);
     }
 
+    public int getDemesne() {
+        return getClaims().size();
+    }
+
+    public int getVulnerableClaims() {
+        return Math.max(0, getDemesne() - getPower());
+    }
+
+    public boolean isAtWarWith(UUID target) {
+        Relationship relationship = getRelationship(target);
+        if (relationship.status != Relationship.Status.ENEMY) {
+            return false;
+        }
+
+        Faction targetFaction = Faction.get(target);
+        if (targetFaction == null) {
+            return false;
+        }
+
+        return targetFaction.getRelationship(id).status == Relationship.Status.ENEMY;
+    }
+
+    public boolean isAtWarWith(Faction faction) {
+        return faction != null && isAtWarWith(faction.getID());
+    }
+
     public void removeAllClaims() {
         Claim.getByFaction(id).stream().forEach(Claim::remove);
         FactionEvents.REMOVE_ALL_CLAIMS.invoker().onRemoveAllClaims(this);

@@ -115,12 +115,9 @@ public class PlaceholdersWrapper {
                     Faction faction = member.getFaction();
                     if (faction == null) return FORMATTED_NULL;
 
-                    int red =
-                            mapBoundRange(
-                                    faction.calculateMaxPower(), 0, 170, 255, faction.getPower());
-                    int green =
-                            mapBoundRange(
-                                    0, faction.calculateMaxPower(), 170, 255, faction.getPower());
+                    int maxPower = Math.max(1, faction.calculateMaxPower());
+                    int red = mapBoundRange(maxPower, 0, 170, 255, faction.getPower());
+                    int green = mapBoundRange(0, maxPower, 170, 255, faction.getPower());
                     return Text.literal(String.valueOf(faction.getPower()))
                             .setStyle(Style.EMPTY.withColor(rgbToInt(red, green, 170)));
                 });
@@ -146,10 +143,7 @@ public class PlaceholdersWrapper {
                     Faction faction = member.getFaction();
                     if (faction == null) return UNFORMATTED_NULL;
 
-                    return Text.of(
-                            String.valueOf(
-                                    faction.getClaims().size()
-                                            * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT));
+                    return Text.of(String.valueOf(faction.getDemesne()));
                 });
 
         register(
@@ -158,10 +152,9 @@ public class PlaceholdersWrapper {
                     Faction faction = member.getFaction();
                     if (faction == null) return FORMATTED_NULL;
 
-                    int reqPower =
-                            faction.getClaims().size() * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT;
-                    int red = mapBoundRange(0, faction.getPower(), 85, 255, reqPower);
-                    return Text.literal(String.valueOf(reqPower))
+                    int demesne = faction.getDemesne();
+                    int red = mapBoundRange(0, Math.max(1, faction.getPower()), 85, 255, demesne);
+                    return Text.literal(String.valueOf(demesne))
                             .setStyle(Style.EMPTY.withColor(rgbToInt(red, 85, 85)));
                 });
     }

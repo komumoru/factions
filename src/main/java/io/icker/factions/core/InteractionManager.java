@@ -183,16 +183,6 @@ public class InteractionManager {
 
         if (item instanceof BucketItem) {
             Fluid fluid = ((BucketItemAccessor) item).getFluid();
-            Identifier fluidId = Registries.FLUID.getId(fluid);
-
-            ActionResult playerResult = checkPermissions(player, player.getBlockPos(), world,
-                    Permissions.PLACE_BLOCKS, fluidId);
-            if (playerResult == ActionResult.FAIL) {
-                InteractionsUtil.warn(player, InteractionsUtilActions.PLACE_OR_PICKUP_LIQUIDS);
-                InteractionsUtil.sync(player, player.getStackInHand(hand), hand);
-                return TypedActionResult.fail(player.getStackInHand(hand));
-            }
-
             FluidHandling handling =
                     fluid == Fluids.EMPTY ? RaycastContext.FluidHandling.SOURCE_ONLY
                             : RaycastContext.FluidHandling.NONE;
@@ -201,19 +191,37 @@ public class InteractionManager {
 
             if (raycastResult.getType() != BlockHitResult.Type.MISS) {
                 BlockPos raycastPos = raycastResult.getBlockPos();
-                if (checkPermissions(player, raycastPos, world,
-                        Permissions.PLACE_BLOCKS, fluidId) == ActionResult.FAIL) {
-                    InteractionsUtil.warn(player, InteractionsUtilActions.PLACE_OR_PICKUP_LIQUIDS);
-                    InteractionsUtil.sync(player, player.getStackInHand(hand), hand);
-                    return TypedActionResult.fail(player.getStackInHand(hand));
-                }
 
-                BlockPos placePos = raycastPos.add(raycastResult.getSide().getVector());
-                if (checkPermissions(player, placePos, world,
-                        Permissions.PLACE_BLOCKS, fluidId) == ActionResult.FAIL) {
-                    InteractionsUtil.warn(player, InteractionsUtilActions.PLACE_OR_PICKUP_LIQUIDS);
-                    InteractionsUtil.sync(player, player.getStackInHand(hand), hand);
-                    return TypedActionResult.fail(player.getStackInHand(hand));
+                if (fluid == Fluids.EMPTY) {
+                    Identifier targetFluidId = Registries.FLUID
+                            .getId(world.getFluidState(raycastPos).getFluid());
+
+                    if (checkPermissions(player, raycastPos, world,
+                            Permissions.BREAK_BLOCKS, targetFluidId) == ActionResult.FAIL) {
+                        InteractionsUtil.warn(player,
+                                InteractionsUtilActions.PLACE_OR_PICKUP_LIQUIDS);
+                        InteractionsUtil.sync(player, player.getStackInHand(hand), hand);
+                        return TypedActionResult.fail(player.getStackInHand(hand));
+                    }
+                } else {
+                    Identifier fluidId = Registries.FLUID.getId(fluid);
+
+                    if (checkPermissions(player, raycastPos, world,
+                            Permissions.PLACE_BLOCKS, fluidId) == ActionResult.FAIL) {
+                        InteractionsUtil.warn(player,
+                                InteractionsUtilActions.PLACE_OR_PICKUP_LIQUIDS);
+                        InteractionsUtil.sync(player, player.getStackInHand(hand), hand);
+                        return TypedActionResult.fail(player.getStackInHand(hand));
+                    }
+
+                    BlockPos placePos = raycastPos.add(raycastResult.getSide().getVector());
+                    if (checkPermissions(player, placePos, world,
+                            Permissions.PLACE_BLOCKS, fluidId) == ActionResult.FAIL) {
+                        InteractionsUtil.warn(player,
+                                InteractionsUtilActions.PLACE_OR_PICKUP_LIQUIDS);
+                        InteractionsUtil.sync(player, player.getStackInHand(hand), hand);
+                        return TypedActionResult.fail(player.getStackInHand(hand));
+                    }
                 }
             }
         }
@@ -351,15 +359,13 @@ public class InteractionManager {
     private static ActionResult evaluateWilderness(Permissions permission,
             @Nullable Identifier target) {
         if (FactionsMod.CONFIG.WILDERNESS == null) {
-            return permission == Permissions.BREAK_BLOCKS || permission == Permissions.PLACE_BLOCKS
-                    ? ActionResult.FAIL
-                    : ActionResult.PASS;
+            return ActionResult.PASS;
         }
 
         switch (permission) {
             case BREAK_BLOCKS -> {
                 if (target == null) {
-                    return ActionResult.FAIL;
+                    return ActionResult.PASS;
                 }
                 return FactionsMod.CONFIG.WILDERNESS.BREAK_WHITELIST.contains(target.toString())
                         ? ActionResult.PASS
@@ -367,7 +373,7 @@ public class InteractionManager {
             }
             case PLACE_BLOCKS -> {
                 if (target == null) {
-                    return ActionResult.FAIL;
+                    return ActionResult.PASS;
                 }
 
                 Identifier waterId = Registries.FLUID.getId(Fluids.WATER);

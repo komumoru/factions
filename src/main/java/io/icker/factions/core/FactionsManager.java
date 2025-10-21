@@ -14,6 +14,7 @@ import io.icker.factions.util.Message;
 import io.icker.factions.util.WorldUtils;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
 import net.minecraft.screen.GenericContainerScreenHandler;
@@ -81,14 +82,34 @@ public class FactionsManager {
 
     private static void playerDeath(ServerPlayerEntity player, DamageSource source) {
         User member = User.get(player.getUuid());
-        if (!member.isInFaction())
+        if (member.isInFaction()) {
+            Faction faction = member.getFaction();
+            int adjusted = member.adjustPower(-FactionsMod.CONFIG.POWER.DEATH_PENALTY);
+            if (adjusted != 0) {
+                new Message("%s lost %d power from dying", player.getName().getString(), -adjusted)
+                        .send(faction);
+            }
+        }
+
+        Entity attacker = source.getAttacker();
+        if (!(attacker instanceof ServerPlayerEntity killer)) {
             return;
+        }
 
-        Faction faction = member.getFaction();
+        User killerUser = User.get(killer.getUuid());
+        if (!killerUser.isInFaction()) {
+            return;
+        }
 
-        int adjusted = faction.adjustPower(-FactionsMod.CONFIG.POWER.DEATH_PENALTY);
-        new Message("%s lost %d power from dying", player.getName().getString(), adjusted)
-                .send(faction);
+        if (member.isInFaction() && member.getFaction() == killerUser.getFaction()) {
+            return;
+        }
+
+        int gained = killerUser.adjustPower(FactionsMod.CONFIG.POWER.KILL_REWARD);
+        if (gained != 0) {
+            new Message("%s gained %d power for the kill", killer.getName().getString(), gained)
+                    .send(killerUser.getFaction());
+        }
     }
 
     private static void powerTick(ServerPlayerEntity player) {
@@ -96,12 +117,11 @@ public class FactionsManager {
         if (!member.isInFaction())
             return;
 
-        Faction faction = member.getFaction();
-
-        int adjusted = faction.adjustPower(FactionsMod.CONFIG.POWER.POWER_TICKS.REWARD);
-        if (adjusted != 0 && FactionsMod.CONFIG.DISPLAY.POWER_MESSAGE)
+        int adjusted = member.adjustPower(FactionsMod.CONFIG.POWER.POWER_TICKS.REWARD);
+        if (adjusted != 0 && FactionsMod.CONFIG.DISPLAY.POWER_MESSAGE) {
             new Message("%s gained %d power from surviving", player.getName().getString(), adjusted)
-                    .send(faction);
+                    .send(member.getFaction());
+        }
     }
 
     private static void updatePlayerList(ServerPlayerEntity... players) {

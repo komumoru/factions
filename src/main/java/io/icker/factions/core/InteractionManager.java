@@ -280,6 +280,10 @@ public class InteractionManager {
             return ActionResult.SUCCESS;
         }
 
+        if (!sourceFaction.isMutualEnemies(targetFaction.getID())) {
+            return ActionResult.SUCCESS;
+        }
+
         return ActionResult.PASS;
     }
 
@@ -308,11 +312,6 @@ public class InteractionManager {
         }
 
         Faction claimFaction = claim.getFaction();
-
-        if (claimFaction.getClaims().size() * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT > claimFaction
-                .getPower()) {
-            return ActionResult.PASS;
-        }
 
         if (!user.isInFaction()) {
             return claimFaction.guest_permissions.contains(permission)

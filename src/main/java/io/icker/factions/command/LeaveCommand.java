@@ -3,7 +3,6 @@ package io.icker.factions.command;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import io.icker.factions.FactionsMod;
 import io.icker.factions.api.persistents.Faction;
 import io.icker.factions.api.persistents.User;
 import io.icker.factions.util.Command;
@@ -28,8 +27,6 @@ public class LeaveCommand implements Command {
 
         if (faction.getUsers().size() == 0) {
             faction.remove();
-        } else {
-            faction.adjustPower(-FactionsMod.CONFIG.POWER.MEMBER);
         }
 
         return 1;

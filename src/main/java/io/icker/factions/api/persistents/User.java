@@ -41,7 +41,7 @@ public class User {
     public Rank rank;
 
     @Field("Radar")
-    public boolean radar = false;
+    public boolean radar;
 
     @Field("Chat")
     public ChatMode chat = ChatMode.GLOBAL;
@@ -64,10 +64,12 @@ public class User {
     public User(UUID id) {
         this.id = id;
         this.power = FactionsMod.CONFIG.POWER.PLAYER_START;
+        this.radar = FactionsMod.CONFIG.DISPLAY.RADAR_DEFAULT;
     }
 
     public User() {
         this.power = FactionsMod.CONFIG.POWER.PLAYER_START;
+        this.radar = FactionsMod.CONFIG.DISPLAY.RADAR_DEFAULT;
     }
 
     public String getKey() {

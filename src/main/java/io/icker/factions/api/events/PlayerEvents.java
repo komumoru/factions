@@ -120,6 +120,17 @@ public class PlayerEvents {
                                 }
                             });
 
+    /** Called when a player dies */
+    public static final Event<Death> ON_DEATH =
+            EventFactory.createArrayBacked(
+                    Death.class,
+                    callbacks ->
+                            (player, source) -> {
+                                for (Death callback : callbacks) {
+                                    callback.onDeath(player, source);
+                                }
+                            });
+
     /** Called when a player is killed by another player */
     public static final Event<KilledByPlayer> ON_KILLED_BY_PLAYER =
             EventFactory.createArrayBacked(
@@ -190,6 +201,11 @@ public class PlayerEvents {
     @FunctionalInterface
     public interface Move {
         void onMove(ServerPlayerEntity player);
+    }
+
+    @FunctionalInterface
+    public interface Death {
+        void onDeath(ServerPlayerEntity player, DamageSource source);
     }
 
     @FunctionalInterface

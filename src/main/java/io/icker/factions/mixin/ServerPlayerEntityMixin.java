@@ -36,6 +36,8 @@ public abstract class ServerPlayerEntityMixin extends LivingEntity {
 
     @Inject(at = @At("HEAD"), method = "onDeath")
     public void onDeath(DamageSource source, CallbackInfo info) {
+        PlayerEvents.ON_DEATH.invoker().onDeath((ServerPlayerEntity) (Object) this, source);
+
         Entity entity = source.getSource();
         if (entity == null || !entity.isPlayer())
             return;

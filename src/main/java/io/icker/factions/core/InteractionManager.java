@@ -303,6 +303,11 @@ public class InteractionManager {
             return ActionResult.PASS;
         }
 
+        if ((permission == Permissions.ATTACK_ENTITIES || permission == Permissions.USE_ENTITIES)
+                && FactionsMod.CONFIG.ALLOW_ENTITY_INTERACTIONS_IN_CLAIMS) {
+            return ActionResult.PASS;
+        }
+
         String dimension = world.getRegistryKey().getValue().toString();
         ChunkPos chunkPosition = world.getChunk(position).getPos();
 
@@ -345,27 +350,51 @@ public class InteractionManager {
 
     private static ActionResult evaluateWilderness(Permissions permission,
             @Nullable Identifier target) {
-        if (!isWildernessRestricted(permission)) {
-            return ActionResult.PASS;
+        if (FactionsMod.CONFIG.WILDERNESS == null) {
+            return permission == Permissions.BREAK_BLOCKS || permission == Permissions.PLACE_BLOCKS
+                    ? ActionResult.FAIL
+                    : ActionResult.PASS;
         }
 
-        if (target == null || FactionsMod.CONFIG.WILDERNESS == null) {
-            return ActionResult.FAIL;
+        switch (permission) {
+            case BREAK_BLOCKS -> {
+                if (target == null) {
+                    return ActionResult.FAIL;
+                }
+                return FactionsMod.CONFIG.WILDERNESS.BREAK_WHITELIST.contains(target.toString())
+                        ? ActionResult.PASS
+                        : ActionResult.FAIL;
+            }
+            case PLACE_BLOCKS -> {
+                if (target == null) {
+                    return ActionResult.FAIL;
+                }
+
+                Identifier waterId = Registries.FLUID.getId(Fluids.WATER);
+                Identifier lavaId = Registries.FLUID.getId(Fluids.LAVA);
+
+                if (target.equals(waterId)) {
+                    return FactionsMod.CONFIG.WILDERNESS.ALLOW_WATER_PLACEMENT ? ActionResult.PASS
+                            : ActionResult.FAIL;
+                }
+
+                if (target.equals(lavaId)) {
+                    return FactionsMod.CONFIG.WILDERNESS.ALLOW_LAVA_PLACEMENT ? ActionResult.PASS
+                            : ActionResult.FAIL;
+                }
+
+                return FactionsMod.CONFIG.WILDERNESS.PLACE_WHITELIST.contains(target.toString())
+                        ? ActionResult.PASS
+                        : ActionResult.FAIL;
+            }
+            case USE_BLOCKS, USE_INVENTORIES, USE_ENTITIES -> {
+                return FactionsMod.CONFIG.WILDERNESS.ALLOW_INTERACTIONS ? ActionResult.PASS
+                        : ActionResult.FAIL;
+            }
+            default -> {
+                return ActionResult.PASS;
+            }
         }
-
-        if (permission == Permissions.BREAK_BLOCKS) {
-            return FactionsMod.CONFIG.WILDERNESS.BREAK_WHITELIST.contains(target.toString())
-                    ? ActionResult.PASS
-                    : ActionResult.FAIL;
-        }
-
-        return FactionsMod.CONFIG.WILDERNESS.PLACE_WHITELIST.contains(target.toString())
-                ? ActionResult.PASS
-                : ActionResult.FAIL;
-    }
-
-    private static boolean isWildernessRestricted(Permissions permission) {
-        return permission == Permissions.BREAK_BLOCKS || permission == Permissions.PLACE_BLOCKS;
     }
 
     private static int getRankLevel(User.Rank rank) {

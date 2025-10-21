@@ -1,10 +1,12 @@
 package io.icker.factions.core;
 
+import io.icker.factions.FactionsMod;
 import io.icker.factions.api.events.MiscEvents;
 import io.icker.factions.api.events.PlayerEvents;
 import io.icker.factions.api.persistents.Claim;
 import io.icker.factions.api.persistents.Faction;
 import io.icker.factions.api.persistents.User;
+import io.icker.factions.command.ClaimCommand;
 import io.icker.factions.util.Message;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -38,6 +40,14 @@ public class WorldManager {
         }
         if (user.autoclaim && claim == null) {
             Faction faction = user.getFaction();
+            if (FactionsMod.CONFIG.CLAIM.REQUIRE_FIRST_CLAIM_CONFIRMATION && faction.getDemesne() == 0
+                    && !faction.isFirstClaimConfirmed()) {
+                ClaimCommand.queueFirstClaimConfirmation(player, faction, chunkPos, dimension, 1);
+                user.autoclaim = false;
+                new Message("Confirm the pending first claim to continue using autoclaim.")
+                        .format(Formatting.YELLOW).send(player, false);
+                return;
+            }
             if (faction.getPower() < faction.getDemesne() + 1) {
                 new Message("Not enough faction power to claim chunk, autoclaim toggled off").fail()
                         .send(player, false);

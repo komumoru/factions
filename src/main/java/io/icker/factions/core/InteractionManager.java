@@ -10,6 +10,8 @@ import io.icker.factions.core.InteractionsUtil.InteractionsUtilActions;
 import io.icker.factions.mixin.BucketItemAccessor;
 import io.icker.factions.mixin.ItemInvoker;
 
+import org.jetbrains.annotations.Nullable;
+
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
@@ -20,6 +22,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.BucketItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -29,6 +32,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 //import net.minecraft.world.BlockView;
@@ -36,6 +40,7 @@ import net.minecraft.world.RaycastContext;
 import net.minecraft.world.RaycastContext.FluidHandling;
 //import net.minecraft.world.explosion.Explosion;
 import net.minecraft.world.World;
+import net.minecraft.registry.Registries;
 
 public class InteractionManager {
     public static void register() {
@@ -53,8 +58,9 @@ public class InteractionManager {
 
     private static boolean onBreakBlock(World world, PlayerEntity player, BlockPos pos,
             BlockState state, BlockEntity blockEntity) {
-        boolean result =
-                checkPermissions(player, pos, world, Permissions.BREAK_BLOCKS) == ActionResult.FAIL;
+        Identifier blockId = Registries.BLOCK.getId(state.getBlock());
+        boolean result = checkPermissions(player, pos, world, Permissions.BREAK_BLOCKS, blockId)
+                == ActionResult.FAIL;
         if (result) {
             InteractionsUtil.warn(player, InteractionsUtilActions.BREAK_BLOCKS);
         }
@@ -154,10 +160,17 @@ public class InteractionManager {
     }
 
     private static ActionResult onPlaceBlock(ItemUsageContext context) {
+        Identifier placeId = null;
+        ItemStack stack = context.getStack();
+        Item item = stack.getItem();
+        if (item instanceof BlockItem blockItem) {
+            placeId = Registries.BLOCK.getId(blockItem.getBlock());
+        }
+
         if (checkPermissions(context.getPlayer(), context.getBlockPos(), context.getWorld(),
-                Permissions.PLACE_BLOCKS) == ActionResult.FAIL) {
+                Permissions.PLACE_BLOCKS, placeId) == ActionResult.FAIL) {
             InteractionsUtil.warn(context.getPlayer(), InteractionsUtilActions.PLACE_BLOCKS);
-            InteractionsUtil.sync(context.getPlayer(), context.getStack(), context.getHand());
+            InteractionsUtil.sync(context.getPlayer(), stack, context.getHand());
             return ActionResult.FAIL;
         }
 
@@ -169,15 +182,17 @@ public class InteractionManager {
         Item item = player.getStackInHand(hand).getItem();
 
         if (item instanceof BucketItem) {
-            ActionResult playerResult =
-                    checkPermissions(player, player.getBlockPos(), world, Permissions.PLACE_BLOCKS);
+            Fluid fluid = ((BucketItemAccessor) item).getFluid();
+            Identifier fluidId = Registries.FLUID.getId(fluid);
+
+            ActionResult playerResult = checkPermissions(player, player.getBlockPos(), world,
+                    Permissions.PLACE_BLOCKS, fluidId);
             if (playerResult == ActionResult.FAIL) {
                 InteractionsUtil.warn(player, InteractionsUtilActions.PLACE_OR_PICKUP_LIQUIDS);
                 InteractionsUtil.sync(player, player.getStackInHand(hand), hand);
                 return TypedActionResult.fail(player.getStackInHand(hand));
             }
 
-            Fluid fluid = ((BucketItemAccessor) item).getFluid();
             FluidHandling handling =
                     fluid == Fluids.EMPTY ? RaycastContext.FluidHandling.SOURCE_ONLY
                             : RaycastContext.FluidHandling.NONE;
@@ -187,7 +202,7 @@ public class InteractionManager {
             if (raycastResult.getType() != BlockHitResult.Type.MISS) {
                 BlockPos raycastPos = raycastResult.getBlockPos();
                 if (checkPermissions(player, raycastPos, world,
-                        Permissions.PLACE_BLOCKS) == ActionResult.FAIL) {
+                        Permissions.PLACE_BLOCKS, fluidId) == ActionResult.FAIL) {
                     InteractionsUtil.warn(player, InteractionsUtilActions.PLACE_OR_PICKUP_LIQUIDS);
                     InteractionsUtil.sync(player, player.getStackInHand(hand), hand);
                     return TypedActionResult.fail(player.getStackInHand(hand));
@@ -195,7 +210,7 @@ public class InteractionManager {
 
                 BlockPos placePos = raycastPos.add(raycastResult.getSide().getVector());
                 if (checkPermissions(player, placePos, world,
-                        Permissions.PLACE_BLOCKS) == ActionResult.FAIL) {
+                        Permissions.PLACE_BLOCKS, fluidId) == ActionResult.FAIL) {
                     InteractionsUtil.warn(player, InteractionsUtilActions.PLACE_OR_PICKUP_LIQUIDS);
                     InteractionsUtil.sync(player, player.getStackInHand(hand), hand);
                     return TypedActionResult.fail(player.getStackInHand(hand));
@@ -270,6 +285,11 @@ public class InteractionManager {
 
     private static ActionResult checkPermissions(PlayerEntity player, BlockPos position,
             World world, Permissions permission) {
+        return checkPermissions(player, position, world, permission, null);
+    }
+
+    private static ActionResult checkPermissions(PlayerEntity player, BlockPos position,
+            World world, Permissions permission, @Nullable Identifier wildernessTarget) {
         if (!FactionsMod.CONFIG.CLAIM_PROTECTION) {
             return ActionResult.PASS;
         }
@@ -283,8 +303,9 @@ public class InteractionManager {
         ChunkPos chunkPosition = world.getChunk(position).getPos();
 
         Claim claim = Claim.get(chunkPosition.x, chunkPosition.z, dimension);
-        if (claim == null)
-            return ActionResult.PASS;
+        if (claim == null) {
+            return evaluateWilderness(permission, wildernessTarget);
+        }
 
         Faction claimFaction = claim.getFaction();
 
@@ -321,6 +342,31 @@ public class InteractionManager {
         }
 
         return ActionResult.FAIL;
+    }
+
+    private static ActionResult evaluateWilderness(Permissions permission,
+            @Nullable Identifier target) {
+        if (!isWildernessRestricted(permission)) {
+            return ActionResult.PASS;
+        }
+
+        if (target == null || FactionsMod.CONFIG.WILDERNESS == null) {
+            return ActionResult.FAIL;
+        }
+
+        if (permission == Permissions.BREAK_BLOCKS) {
+            return FactionsMod.CONFIG.WILDERNESS.BREAK_WHITELIST.contains(target.toString())
+                    ? ActionResult.PASS
+                    : ActionResult.FAIL;
+        }
+
+        return FactionsMod.CONFIG.WILDERNESS.PLACE_WHITELIST.contains(target.toString())
+                ? ActionResult.PASS
+                : ActionResult.FAIL;
+    }
+
+    private static boolean isWildernessRestricted(Permissions permission) {
+        return permission == Permissions.BREAK_BLOCKS || permission == Permissions.PLACE_BLOCKS;
     }
 
     private static int getRankLevel(User.Rank rank) {

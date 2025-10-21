@@ -28,6 +28,7 @@ public class Config {
                 .registerTypeAdapter(HomeConfig.class, new Deserializer<>(HomeConfig.class))
                 .registerTypeAdapter(PowerConfig.class, new Deserializer<>(PowerConfig.class))
                 .registerTypeAdapter(SafeConfig.class, new Deserializer<>(SafeConfig.class))
+                .registerTypeAdapter(WildernessConfig.class, new Deserializer<>(WildernessConfig.class))
                 .create();
 
         try {
@@ -58,6 +59,10 @@ public class Config {
                 config.DISPLAY = defaults.DISPLAY;
             }
 
+            if (config.WILDERNESS == null) {
+                config.WILDERNESS = defaults.WILDERNESS;
+            }
+
             if (config.VERSION != REQUIRED_VERSION) {
                 FactionsMod.LOGGER.error(String.format(
                         "Config file incompatible (requires version %d)", REQUIRED_VERSION));
@@ -81,6 +86,7 @@ public class Config {
                     .registerTypeAdapter(HomeConfig.class, new Deserializer<>(HomeConfig.class))
                     .registerTypeAdapter(PowerConfig.class, new Deserializer<>(PowerConfig.class))
                     .registerTypeAdapter(SafeConfig.class, new Deserializer<>(SafeConfig.class))
+                    .registerTypeAdapter(WildernessConfig.class, new Deserializer<>(WildernessConfig.class))
                     .create();
 
             FileWriter writer = new FileWriter(file);
@@ -118,6 +124,9 @@ public class Config {
 
     @SerializedName("relationships")
     public RelationshipConfig RELATIONSHIPS = new RelationshipConfig();
+
+    @SerializedName("wilderness")
+    public WildernessConfig WILDERNESS = new WildernessConfig();
 
     @SerializedName("maxFactionSize")
     public int MAX_FACTION_SIZE = -1;

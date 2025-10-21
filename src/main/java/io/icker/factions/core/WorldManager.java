@@ -43,10 +43,14 @@ public class WorldManager {
                         .send(player, false);
                 user.autoclaim = false;
             } else {
-                faction.addClaim(chunkPos.x, chunkPos.z, dimension);
-                claim = Claim.get(chunkPos.x, chunkPos.z, dimension);
-                new Message("Chunk (%d, %d) claimed by %s", chunkPos.x, chunkPos.z,
-                        player.getName().getString()).send(faction);
+                if (!faction.addClaim(chunkPos.x, chunkPos.z, dimension)) {
+                    new Message("Chunk (%d, %d) must be connected to your existing territory", chunkPos.x,
+                            chunkPos.z).fail().send(player, false);
+                } else {
+                    claim = Claim.get(chunkPos.x, chunkPos.z, dimension);
+                    new Message("Chunk (%d, %d) claimed by %s", chunkPos.x, chunkPos.z,
+                            player.getName().getString()).send(faction);
+                }
             }
         }
         if (user.radar) {

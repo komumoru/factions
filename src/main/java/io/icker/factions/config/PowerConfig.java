@@ -12,6 +12,9 @@ public class PowerConfig {
     @SerializedName("deathPenalty")
     public int DEATH_PENALTY = 10;
 
+    @SerializedName("penalizeAllDeaths")
+    public boolean PENALIZE_ALL_DEATHS = true;
+
     @SerializedName("killReward")
     public int KILL_REWARD = 2;
 

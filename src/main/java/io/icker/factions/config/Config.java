@@ -19,7 +19,7 @@ import io.icker.factions.api.persistents.Relationship;
 import net.fabricmc.loader.api.FabricLoader;
 
 public class Config {
-    private static final int REQUIRED_VERSION = 4;
+    private static final int REQUIRED_VERSION = 5;
     private static final File file = FabricLoader.getInstance().getGameDir().resolve("config")
             .resolve("factions.json").toFile();
 
@@ -63,6 +63,10 @@ public class Config {
                 config.WILDERNESS = defaults.WILDERNESS;
             }
 
+            if (config.CLAIM == null) {
+                config.CLAIM = defaults.CLAIM;
+            }
+
             if (config.VERSION != REQUIRED_VERSION) {
                 FactionsMod.LOGGER.error(String.format(
                         "Config file incompatible (requires version %d)", REQUIRED_VERSION));
@@ -87,7 +91,7 @@ public class Config {
                     .registerTypeAdapter(PowerConfig.class, new Deserializer<>(PowerConfig.class))
                     .registerTypeAdapter(SafeConfig.class, new Deserializer<>(SafeConfig.class))
                     .registerTypeAdapter(WildernessConfig.class, new Deserializer<>(WildernessConfig.class))
-                    .create();
+                .create();
 
             FileWriter writer = new FileWriter(file);
             gson.toJson(config, writer);
@@ -128,6 +132,9 @@ public class Config {
     @SerializedName("wilderness")
     public WildernessConfig WILDERNESS = new WildernessConfig();
 
+    @SerializedName("claim")
+    public ClaimConfig CLAIM = new ClaimConfig();
+
     @SerializedName("maxFactionSize")
     public int MAX_FACTION_SIZE = -1;
 
@@ -139,6 +146,9 @@ public class Config {
 
     @SerializedName("claimProtections")
     public boolean CLAIM_PROTECTION = true;
+
+    @SerializedName("allowEntityInteractionsInClaims")
+    public boolean ALLOW_ENTITY_INTERACTIONS_IN_CLAIMS = true;
 
     @SerializedName("JourneyFactionsIntegration")
     public boolean JOURNEYFACTIONS_INTEGRATION = false;
@@ -158,6 +168,9 @@ public class Config {
 
         @SerializedName("powerMessage")
         public boolean POWER_MESSAGE = true;
+
+        @SerializedName("radarDefault")
+        public boolean RADAR_DEFAULT = true;
     }
 
     public static class RelationshipConfig {
@@ -188,5 +201,22 @@ public class Config {
 
             return new Gson().fromJson(json, clazz);
         }
+    }
+
+    public static class ClaimConfig {
+        @SerializedName("maxBatchSize")
+        public int MAX_BATCH_SIZE = 3;
+
+        @SerializedName("allowRemoveAll")
+        public boolean ALLOW_REMOVE_ALL = false;
+
+        @SerializedName("unclaimCooldownSeconds")
+        public int UNCLAIM_COOLDOWN_SECONDS = 43200;
+
+        @SerializedName("requireUnclaimConfirmation")
+        public boolean REQUIRE_UNCLAIM_CONFIRMATION = true;
+
+        @SerializedName("requireFirstClaimConfirmation")
+        public boolean REQUIRE_FIRST_CLAIM_CONFIRMATION = true;
     }
 }

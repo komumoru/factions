@@ -65,6 +65,12 @@ public class Faction {
     public ArrayList<Relationship.Permissions> guest_permissions =
             new ArrayList<>(FactionsMod.CONFIG.RELATIONSHIPS.DEFAULT_GUEST_PERMISSIONS);
 
+    @Field("UnclaimCooldownExpiry")
+    private long unclaimCooldownExpiry = -1;
+
+    @Field("FirstClaimConfirmed")
+    private boolean firstClaimConfirmed = false;
+
     public Faction(String name, String description, String motd, Formatting color, boolean open) {
         this.id = UUID.randomUUID();
         this.name = name;
@@ -196,6 +202,7 @@ public class Faction {
     public void removeAllClaims() {
         Claim.getByFaction(id).stream().forEach(Claim::remove);
         FactionEvents.REMOVE_ALL_CLAIMS.invoker().onRemoveAllClaims(this);
+        firstClaimConfirmed = false;
     }
 
     public boolean addClaim(int x, int z, String level) {
@@ -364,6 +371,30 @@ public class Faction {
         if (oldPower != getPower()) {
             FactionEvents.POWER_CHANGE.invoker().onPowerChange(this, oldPower);
         }
+    }
+
+    public long getUnclaimCooldownExpiry() {
+        return unclaimCooldownExpiry;
+    }
+
+    public void setUnclaimCooldownExpiry(long expiry) {
+        this.unclaimCooldownExpiry = expiry;
+    }
+
+    public boolean isUnclaimOnCooldown() {
+        return unclaimCooldownExpiry > System.currentTimeMillis();
+    }
+
+    public long getUnclaimCooldownRemaining() {
+        return Math.max(0, unclaimCooldownExpiry - System.currentTimeMillis());
+    }
+
+    public boolean isFirstClaimConfirmed() {
+        return firstClaimConfirmed;
+    }
+
+    public void setFirstClaimConfirmed(boolean confirmed) {
+        this.firstClaimConfirmed = confirmed;
     }
 
     public Collection<User> getRelationships() {

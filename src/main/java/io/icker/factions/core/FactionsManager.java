@@ -36,7 +36,8 @@ public class FactionsManager {
         FactionEvents.MODIFY.register(FactionsManager::factionModified);
         FactionEvents.MEMBER_JOIN.register(FactionsManager::memberChange);
         FactionEvents.MEMBER_LEAVE.register(FactionsManager::memberChange);
-        PlayerEvents.ON_KILLED_BY_PLAYER.register(FactionsManager::playerDeath);
+        PlayerEvents.ON_DEATH.register(FactionsManager::playerDeath);
+        PlayerEvents.ON_KILLED_BY_PLAYER.register(FactionsManager::playerKilledByPlayer);
         PlayerEvents.ON_POWER_TICK.register(FactionsManager::powerTick);
         PlayerEvents.OPEN_SAFE.register(FactionsManager::openSafe);
 
@@ -83,19 +84,29 @@ public class FactionsManager {
     private static void playerDeath(ServerPlayerEntity player, DamageSource source) {
         User member = User.get(player.getUuid());
         if (member.isInFaction()) {
-            Faction faction = member.getFaction();
-            int adjusted = member.adjustPower(-FactionsMod.CONFIG.POWER.DEATH_PENALTY);
-            if (adjusted != 0) {
-                new Message("%s lost %d power from dying", player.getName().getString(), -adjusted)
-                        .send(faction);
+            Entity attacker = source.getAttacker();
+            boolean penalize = FactionsMod.CONFIG.POWER.PENALIZE_ALL_DEATHS
+                    || attacker instanceof ServerPlayerEntity;
+
+            if (penalize) {
+                Faction faction = member.getFaction();
+                int adjusted = member.adjustPower(-FactionsMod.CONFIG.POWER.DEATH_PENALTY);
+                if (adjusted != 0) {
+                    new Message("%s lost %d power from dying", player.getName().getString(),
+                            -adjusted).send(faction);
+                }
             }
         }
 
+    }
+
+    private static void playerKilledByPlayer(ServerPlayerEntity player, DamageSource source) {
         Entity attacker = source.getAttacker();
         if (!(attacker instanceof ServerPlayerEntity killer)) {
             return;
         }
 
+        User member = User.get(player.getUuid());
         User killerUser = User.get(killer.getUuid());
         if (!killerUser.isInFaction()) {
             return;

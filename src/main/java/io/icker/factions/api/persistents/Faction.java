@@ -201,8 +201,39 @@ public class Faction {
         FactionEvents.REMOVE_ALL_CLAIMS.invoker().onRemoveAllClaims(this);
     }
 
-    public void addClaim(int x, int z, String level) {
+    public boolean addClaim(int x, int z, String level) {
+        if (!canClaimConnected(x, z, level)) {
+            return false;
+        }
+
         Claim.add(new Claim(x, z, level, id));
+        return true;
+    }
+
+    public boolean canClaimConnected(int x, int z, String level) {
+        return canClaimConnected(x, z, level,
+                Claim.getByFaction(id).stream().filter(claim -> claim.level.equals(level)).toList());
+    }
+
+    public boolean canClaimConnected(int x, int z, String level, List<Claim> existingClaims) {
+        Claim existing = Claim.get(x, z, level);
+        if (existing != null && existing.factionID.equals(id)) {
+            return true;
+        }
+
+        if (existingClaims.isEmpty()) {
+            return true;
+        }
+
+        int[][] directions = new int[][] { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } };
+        for (int[] dir : directions) {
+            Claim adjacent = Claim.get(x + dir[0], z + dir[1], level);
+            if (adjacent != null && adjacent.factionID.equals(id)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public boolean isInvited(UUID playerID) {

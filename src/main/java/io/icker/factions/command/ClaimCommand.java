@@ -1,6 +1,7 @@
 package io.icker.factions.command;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -95,7 +96,37 @@ public class ClaimCommand implements Command {
             }
         }
 
-        chunks.forEach(chunk -> faction.addClaim(chunk.x, chunk.z, dimension));
+        List<Claim> existingLevelClaims = faction.getClaims().stream()
+                .filter(claim -> claim.level.equals(dimension)).toList();
+
+        if (!existingLevelClaims.isEmpty()) {
+            int connectedIndex = -1;
+            for (int i = 0; i < chunks.size(); i++) {
+                ChunkPos chunk = chunks.get(i);
+                if (faction.canClaimConnected(chunk.x, chunk.z, dimension, existingLevelClaims)) {
+                    connectedIndex = i;
+                    break;
+                }
+            }
+
+            if (connectedIndex == -1) {
+                new Message("Claims must be connected to your existing territory").fail().send(player,
+                        false);
+                return 0;
+            }
+
+            if (connectedIndex != 0) {
+                Collections.swap(chunks, 0, connectedIndex);
+            }
+        }
+
+        for (ChunkPos chunk : chunks) {
+            if (!faction.addClaim(chunk.x, chunk.z, dimension)) {
+                new Message("Claims must be connected to your existing territory").fail().send(player,
+                        false);
+                return 0;
+            }
+        }
         if (size == 1) {
             new Message("Chunk (%d, %d) claimed by %s", chunks.get(0).x, chunks.get(0).z,
                     player.getName().getString()).send(faction);

@@ -1,6 +1,5 @@
 package io.icker.factions.core;
 
-import io.icker.factions.FactionsMod;
 import io.icker.factions.api.events.MiscEvents;
 import io.icker.factions.api.events.PlayerEvents;
 import io.icker.factions.api.persistents.Claim;
@@ -39,13 +38,7 @@ public class WorldManager {
         }
         if (user.autoclaim && claim == null) {
             Faction faction = user.getFaction();
-            int requiredPower =
-                    (faction.getClaims().size() + 1) * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT;
-            int maxPower = faction.getUsers().size() * FactionsMod.CONFIG.POWER.MEMBER
-                    + FactionsMod.CONFIG.POWER.BASE
-                    + faction.getAdminPower();
-
-            if (maxPower < requiredPower) {
+            if (faction.getPower() < faction.getDemesne() + 1) {
                 new Message("Not enough faction power to claim chunk, autoclaim toggled off").fail()
                         .send(player, false);
                 user.autoclaim = false;

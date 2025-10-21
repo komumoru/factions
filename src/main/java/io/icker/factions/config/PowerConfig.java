@@ -3,23 +3,20 @@ package io.icker.factions.config;
 import com.google.gson.annotations.SerializedName;
 
 public class PowerConfig {
-    @SerializedName("base")
-    public int BASE = 20;
+    @SerializedName("playerMax")
+    public int PLAYER_MAX = 20;
 
-    @SerializedName("member")
-    public int MEMBER = 20;
-
-    @SerializedName("claimWeight")
-    public int CLAIM_WEIGHT = 5;
+    @SerializedName("playerStart")
+    public int PLAYER_START = 10;
 
     @SerializedName("deathPenalty")
     public int DEATH_PENALTY = 10;
 
+    @SerializedName("killReward")
+    public int KILL_REWARD = 2;
+
     @SerializedName("powerTicks")
     public PowerTicks POWER_TICKS = new PowerTicks();
-
-    @SerializedName("powerPerAlly")
-    public int POWER_PER_ALLY = 0;
 
     public static class PowerTicks {
         @SerializedName("ticks")

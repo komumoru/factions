@@ -95,11 +95,12 @@ public class PlaceholdersWrapper {
             if (faction == null)
                 return FORMATTED_NULL;
 
-            int red = mapBoundRange(faction.calculateMaxPower(), 0, 170, 255, faction.getPower());
-            int green = mapBoundRange(0, faction.calculateMaxPower(), 170, 255, faction.getPower());
-            return Text.literal(String.valueOf(faction.getPower()))
-                    .setStyle(Style.EMPTY.withColor(TextColor.parse(
-                            "#" + Integer.toHexString(red) + Integer.toHexString(green) + "AA")));
+            int maxPower = Math.max(1, faction.getMaxPower());
+            int current = faction.getPower();
+            int red = clampColor(mapBoundRange(0, maxPower, 170, 255, maxPower - current));
+            int green = clampColor(mapBoundRange(0, maxPower, 170, 255, current));
+            return Text.literal(String.valueOf(current)).setStyle(Style.EMPTY
+                    .withColor(TextColor.parse(String.format("#%02X%02XAA", red, green))));
         });
 
         register("max_power", (member) -> {
@@ -107,11 +108,11 @@ public class PlaceholdersWrapper {
             if (faction == null)
                 return UNFORMATTED_NULL;
 
-            return Text.of(String.valueOf(faction.calculateMaxPower()));
+            return Text.of(String.valueOf(faction.getMaxPower()));
         });
 
         register("player_power", (member) -> {
-            return Text.of(String.valueOf(FactionsMod.CONFIG.POWER.MEMBER));
+            return Text.of(String.valueOf(member.getPower()));
         });
 
         register("required_power", (member) -> {
@@ -119,8 +120,7 @@ public class PlaceholdersWrapper {
             if (faction == null)
                 return UNFORMATTED_NULL;
 
-            return Text.of(String
-                    .valueOf(faction.getClaims().size() * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT));
+            return Text.of(String.valueOf(faction.getDemesne()));
         });
 
         register("required_power_formatted", (member) -> {
@@ -128,16 +128,23 @@ public class PlaceholdersWrapper {
             if (faction == null)
                 return FORMATTED_NULL;
 
-            int reqPower = faction.getClaims().size() * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT;
-            int red = mapBoundRange(0, faction.getPower(), 85, 255, reqPower);
-            return Text.literal(String.valueOf(reqPower)).setStyle(Style.EMPTY
-                    .withColor(TextColor.parse("#" + Integer.toHexString(red) + "5555")));
+            int reqPower = faction.getDemesne();
+            boolean overextended = reqPower > faction.getPower();
+            int color = overextended ? 0xFF5555 : 0x55FF55;
+            return Text.literal(String.valueOf(reqPower))
+                    .setStyle(Style.EMPTY.withColor(TextColor.fromRgb(color)));
         });
     }
 
-    private static int mapBoundRange(int from_min, int from_max, int to_min, int to_max,
-            int value) {
-        return Math.min(to_max, Math.max(to_min,
-                to_min + ((value - from_min) * (to_max - to_min)) / (from_max - from_min)));
+    private static int mapBoundRange(int fromMin, int fromMax, int toMin, int toMax, int value) {
+        if (fromMax == fromMin) {
+            return toMax;
+        }
+        return Math.min(toMax, Math.max(toMin,
+                toMin + ((value - fromMin) * (toMax - toMin)) / (fromMax - fromMin)));
+    }
+
+    private static int clampColor(int value) {
+        return Math.min(255, Math.max(0, value));
     }
 }

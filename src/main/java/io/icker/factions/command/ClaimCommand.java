@@ -3,14 +3,15 @@ package io.icker.factions.command;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import io.icker.factions.FactionsMod;
 import io.icker.factions.api.persistents.Claim;
 import io.icker.factions.api.persistents.Faction;
 import io.icker.factions.api.persistents.User;
@@ -77,6 +78,8 @@ public class ClaimCommand implements Command {
 
         String dimension = world.getRegistryKey().getValue().toString();
         ArrayList<ChunkPos> chunks = new ArrayList<ChunkPos>();
+        HashMap<UUID, Integer> enemyClaimsTaken = new HashMap<>();
+        HashSet<Claim> claimsToRemove = new HashSet<>();
 
         for (int x = -size + 1; x < size; x++) {
             for (int y = -size + 1; y < size; y++) {
@@ -85,22 +88,47 @@ public class ClaimCommand implements Command {
                 Claim existingClaim = Claim.get(chunkPos.x, chunkPos.z, dimension);
 
                 if (existingClaim != null) {
-                    if (size == 1) {
-                        String owner =
-                                existingClaim.getFaction().getID() == faction.getID() ? "Your"
-                                        : "Another";
-                        new Message(owner + " faction already owns this chunk").fail().send(player,
-                                false);
-                        return 0;
-                    } else if (existingClaim.getFaction().getID() != faction.getID()) {
-                        new Message("Another faction already owns a chunk").fail().send(player,
-                                false);
+                    Faction owner = existingClaim.getFaction();
+                    if (owner.getID() == faction.getID()) {
+                        if (size == 1) {
+                            new Message("Your faction already owns this chunk").fail()
+                                    .send(player, false);
+                            return 0;
+                        }
+                        continue;
+                    }
+
+                    if (!faction.isMutualEnemies(owner.getID())) {
+                        new Message("You must be mutual enemies with %s to claim this chunk",
+                                owner.getName()).fail().send(player, false);
                         return 0;
                     }
+
+                    int alreadyTaken = enemyClaimsTaken.getOrDefault(owner.getID(), 0);
+                    int remainingDemesne = owner.getDemesne() - alreadyTaken;
+                    if (remainingDemesne <= owner.getPower()) {
+                        new Message("%s still has enough power to protect this chunk",
+                                owner.getName()).fail().send(player, false);
+                        return 0;
+                    }
+
+                    enemyClaimsTaken.put(owner.getID(), alreadyTaken + 1);
+                    claimsToRemove.add(existingClaim);
                 }
 
                 chunks.add(chunkPos);
             }
+        }
+
+        if (chunks.isEmpty()) {
+            new Message("No new chunks to claim").fail().send(player, false);
+            return 0;
+        }
+
+        if (faction.getPower() < faction.getDemesne() + chunks.size()) {
+            new Message("Not enough faction power to claim chunk" + (chunks.size() > 1 ? "s" : ""))
+                    .fail().send(player, false);
+            return 0;
         }
 
         List<Claim> existingLevelClaims = faction.getClaims().stream()
@@ -128,6 +156,12 @@ public class ClaimCommand implements Command {
         }
 
         for (ChunkPos chunk : chunks) {
+            Claim existing = Claim.get(chunk.x, chunk.z, dimension);
+            if (existing != null && existing.getFaction().getID() != faction.getID()
+                    && claimsToRemove.contains(existing)) {
+                claimsToRemove.remove(existing);
+                existing.remove();
+            }
             if (!faction.addClaim(chunk.x, chunk.z, dimension)) {
                 new Message("Claims must be connected to your existing territory").fail().send(player,
                         false);
@@ -150,16 +184,6 @@ public class ClaimCommand implements Command {
         ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
         Faction faction = Command.getUser(player).getFaction();
 
-        int requiredPower =
-                (faction.getClaims().size() + 1) * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT;
-        int maxPower = faction.getUsers().size() * FactionsMod.CONFIG.POWER.MEMBER
-                + FactionsMod.CONFIG.POWER.BASE + faction.getAdminPower();
-
-        if (maxPower < requiredPower) {
-            new Message("Not enough faction power to claim chunk").fail().send(player, false);
-            return 0;
-        }
-
         return addForced(context, 1);
     }
 
@@ -167,16 +191,6 @@ public class ClaimCommand implements Command {
         int size = IntegerArgumentType.getInteger(context, "size");
         ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
         Faction faction = Command.getUser(player).getFaction();
-
-        int requiredPower =
-                (faction.getClaims().size() + 1) * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT;
-        int maxPower = faction.getUsers().size() * FactionsMod.CONFIG.POWER.MEMBER
-                + FactionsMod.CONFIG.POWER.BASE + faction.getAdminPower();
-
-        if (maxPower < requiredPower) {
-            new Message("Not enough faction power to claim chunks").fail().send(player, false);
-            return 0;
-        }
 
         return addForced(context, size);
     }

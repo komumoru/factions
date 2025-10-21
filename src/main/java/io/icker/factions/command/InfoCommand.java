@@ -75,9 +75,9 @@ public class InfoCommand implements Command {
                 .map(rel -> Faction.get(rel.target)).map(fac -> fac.getColor() + fac.getName())
                 .collect(Collectors.joining(Formatting.GRAY + ", "));
 
-        int requiredPower = faction.getClaims().size() * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT;
-        int maxPower =
-                users.size() * FactionsMod.CONFIG.POWER.MEMBER + FactionsMod.CONFIG.POWER.BASE;
+        int power = faction.getPower();
+        int demesne = faction.getDemesne();
+        int maxPower = faction.getMaxPower();
 
         // generate the ---
         int numDashes = 32 - faction.getName().length();
@@ -91,9 +91,12 @@ public class InfoCommand implements Command {
         new Message(Formatting.GOLD + "Owner: ").add(Formatting.WHITE + owner).send(player, false);
         new Message(Formatting.GOLD + "Members (" + Formatting.WHITE.toString() + users.size()
                 + Formatting.GOLD.toString() + "): ").add(usersList).send(player, false);
-        new Message(Formatting.GOLD + "Power: ").add(Formatting.GREEN.toString()
-                + faction.getPower() + slash() + requiredPower + slash() + maxPower)
-                .hover("Current / Required / Max").send(player, false);
+        new Message(Formatting.GOLD + "Power: ")
+                .add(Formatting.GREEN.toString() + power + slash() + maxPower)
+                .hover("Current / Max").send(player, false);
+        new Message(Formatting.GOLD + "Demesne: ")
+                .add(Formatting.GREEN.toString() + demesne + slash() + power)
+                .hover("Claims / Available Power").send(player, false);
         new Message(Formatting.GREEN + "Allies (" + Formatting.WHITE
                 + faction.getMutualAllies().size() + Formatting.GREEN + "): ").add(mutualAllies)
                         .send(player, false);

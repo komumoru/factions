@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import io.icker.factions.FactionsMod;
 import io.icker.factions.api.events.FactionEvents;
 import io.icker.factions.database.Database;
 import io.icker.factions.database.Field;
@@ -51,6 +52,9 @@ public class User {
     @Field("HomeCooldown")
     public long homeCooldown = -1;
 
+    @Field("Power")
+    private int power;
+
     public boolean autoclaim = false;
     public boolean bypass = false;
     public String language = "en_us";
@@ -59,9 +63,12 @@ public class User {
 
     public User(UUID id) {
         this.id = id;
+        this.power = FactionsMod.CONFIG.POWER.PLAYER_START;
     }
 
-    public User() {}
+    public User() {
+        this.power = FactionsMod.CONFIG.POWER.PLAYER_START;
+    }
 
     public String getKey() {
         return id.toString();
@@ -157,4 +164,54 @@ public class User {
         Database.save(User.class, STORE.values().stream().toList());
     }
 
+    public int getPower() {
+        return power;
+    }
+
+    public int getMaxPower() {
+        return FactionsMod.CONFIG.POWER.PLAYER_MAX;
+    }
+
+    public int adjustPower(int adjustment) {
+        int max = getMaxPower();
+        int newPower = Math.min(Math.max(0, power + adjustment), max);
+        int oldPower = power;
+
+        if (newPower == oldPower) {
+            return 0;
+        }
+
+        Faction faction = getFaction();
+        Integer oldFactionPower = null;
+        if (faction != null) {
+            oldFactionPower = faction.getPower();
+        }
+
+        power = newPower;
+
+        if (faction != null && oldFactionPower != null) {
+            faction.notifyPowerChange(oldFactionPower);
+        }
+
+        return newPower - oldPower;
+    }
+
+    public void setPower(int power) {
+        int bounded = Math.min(Math.max(0, power), getMaxPower());
+        if (bounded == this.power) {
+            return;
+        }
+
+        Faction faction = getFaction();
+        Integer oldFactionPower = null;
+        if (faction != null) {
+            oldFactionPower = faction.getPower();
+        }
+
+        this.power = bounded;
+
+        if (faction != null && oldFactionPower != null) {
+            faction.notifyPowerChange(oldFactionPower);
+        }
+    }
 }

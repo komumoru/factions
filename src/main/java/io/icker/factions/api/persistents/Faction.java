@@ -44,7 +44,7 @@ public class Faction {
     private boolean open;
 
     @Field("Power")
-    private int power;
+    private int legacyPower;
 
     @Field("AdminPower")
     private int adminPower;
@@ -65,15 +65,13 @@ public class Faction {
     public ArrayList<Relationship.Permissions> guest_permissions =
             new ArrayList<>(FactionsMod.CONFIG.RELATIONSHIPS.DEFAULT_GUEST_PERMISSIONS);
 
-    public Faction(String name, String description, String motd, Formatting color, boolean open,
-            int power) {
+    public Faction(String name, String description, String motd, Formatting color, boolean open) {
         this.id = UUID.randomUUID();
         this.name = name;
         this.motd = motd;
         this.description = description;
         this.color = color.getName();
         this.open = open;
-        this.power = power;
     }
 
     public Faction() {}
@@ -125,7 +123,15 @@ public class Faction {
     }
 
     public int getPower() {
-        return power + adminPower;
+        return getUsers().stream().mapToInt(User::getPower).sum() + adminPower;
+    }
+
+    public int getDemesne() {
+        return getClaims().size();
+    }
+
+    public int getMaxPower() {
+        return calculateMaxPower();
     }
 
     public SimpleInventory getSafe() {
@@ -167,25 +173,16 @@ public class Faction {
         FactionEvents.MODIFY.invoker().onModify(this);
     }
 
-    public int adjustPower(int adjustment) {
-        int maxPower = calculateMaxPower();
-        int newPower = Math.min(Math.max(0, power + adjustment), maxPower);
-        int oldPower = this.power;
-
-        if (newPower == oldPower)
-            return 0;
-
-        power = newPower;
-        FactionEvents.POWER_CHANGE.invoker().onPowerChange(this, oldPower);
-        return Math.abs(newPower - oldPower);
-    }
-
     public int getAdminPower() {
         return adminPower;
     }
 
     public void addAdminPower(int amount) {
+        int oldPower = getPower();
         adminPower += amount;
+        if (oldPower != getPower()) {
+            FactionEvents.POWER_CHANGE.invoker().onPowerChange(this, oldPower);
+        }
     }
 
     public List<User> getUsers() {
@@ -262,6 +259,12 @@ public class Faction {
         Relationship rel = getRelationship(target);
         return rel.status == Relationship.Status.ALLY
                 && getReverse(rel).status == Relationship.Status.ALLY;
+    }
+
+    public boolean isMutualEnemies(UUID target) {
+        Relationship rel = getRelationship(target);
+        return rel.status == Relationship.Status.ENEMY
+                && getReverse(rel).status == Relationship.Status.ENEMY;
     }
 
     public List<Relationship> getMutualAllies() {
@@ -353,11 +356,14 @@ public class Faction {
         Database.save(Faction.class, STORE.values().stream().toList());
     }
 
-    // TO DO(samu): import per-player power patch
     public int calculateMaxPower() {
-        return FactionsMod.CONFIG.POWER.BASE
-                + (getUsers().size() * FactionsMod.CONFIG.POWER.MEMBER)
-                + (getMutualAllies().size() * FactionsMod.CONFIG.POWER.POWER_PER_ALLY);
+        return getUsers().stream().mapToInt(User::getMaxPower).sum() + adminPower;
+    }
+
+    public void notifyPowerChange(int oldPower) {
+        if (oldPower != getPower()) {
+            FactionEvents.POWER_CHANGE.invoker().onPowerChange(this, oldPower);
+        }
     }
 
     public Collection<User> getRelationships() {

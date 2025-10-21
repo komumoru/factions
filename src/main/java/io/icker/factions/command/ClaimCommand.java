@@ -22,6 +22,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.World;
 
 public class ClaimCommand implements Command {
     private int list(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
@@ -68,6 +69,12 @@ public class ClaimCommand implements Command {
         ServerWorld world = (ServerWorld) player.getWorld();
 
         Faction faction = Command.getUser(player).getFaction();
+
+        if (!world.getRegistryKey().equals(World.OVERWORLD)) {
+            new Message("Claims are only allowed in the Overworld").fail().send(player, false);
+            return 0;
+        }
+
         String dimension = world.getRegistryKey().getValue().toString();
         ArrayList<ChunkPos> chunks = new ArrayList<ChunkPos>();
 

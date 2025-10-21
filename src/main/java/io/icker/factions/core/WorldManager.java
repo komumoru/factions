@@ -11,6 +11,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.World;
 
 public class WorldManager {
     public static void register() {
@@ -26,10 +27,16 @@ public class WorldManager {
         User user = User.get(player.getUuid());
         ServerWorld world = (ServerWorld) player.getWorld();
         String dimension = world.getRegistryKey().getValue().toString();
+        boolean isOverworld = world.getRegistryKey().equals(World.OVERWORLD);
 
         ChunkPos chunkPos = world.getChunk(player.getBlockPos()).getPos();
 
         Claim claim = Claim.get(chunkPos.x, chunkPos.z, dimension);
+        if (user.autoclaim && !isOverworld) {
+            new Message("Autoclaim is only available in the Overworld, toggled off").fail().send(player,
+                    false);
+            user.autoclaim = false;
+        }
         if (user.autoclaim && claim == null) {
             Faction faction = user.getFaction();
             int requiredPower =

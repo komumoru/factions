@@ -19,7 +19,7 @@ import io.icker.factions.api.persistents.Relationship;
 import net.fabricmc.loader.api.FabricLoader;
 
 public class Config {
-    private static final int REQUIRED_VERSION = 5;
+    private static final int REQUIRED_VERSION = 6;
     private static final File file = FabricLoader.getInstance().getGameDir().resolve("config")
             .resolve("factions.json").toFile();
 

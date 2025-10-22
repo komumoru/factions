@@ -31,6 +31,7 @@ import net.minecraft.world.World;
 
 public class ClaimCommand implements Command {
     private static final long CONFIRMATION_TIMEOUT_MS = 60_000L;
+    private static final long CONTESTED_CLAIM_COOLDOWN_MS = 3_600_000L;
     private static final Map<UUID, PendingClaim> PENDING_CLAIMS = new HashMap<>();
     private static final Map<UUID, PendingUnclaim> PENDING_UNCLAIMS = new HashMap<>();
 
@@ -77,10 +78,12 @@ public class ClaimCommand implements Command {
     private static class ClaimPlan {
         final ArrayList<ChunkPos> chunks;
         final HashSet<Claim> claimsToRemove;
+        final HashSet<ChunkPos> warCaptures;
 
-        ClaimPlan(ArrayList<ChunkPos> chunks, HashSet<Claim> claimsToRemove) {
+        ClaimPlan(ArrayList<ChunkPos> chunks, HashSet<Claim> claimsToRemove, HashSet<ChunkPos> warCaptures) {
             this.chunks = chunks;
             this.claimsToRemove = claimsToRemove;
+            this.warCaptures = warCaptures;
         }
     }
 
@@ -136,6 +139,12 @@ public class ClaimCommand implements Command {
         Faction faction = user.getFaction();
 
         if (faction == null) {
+            return 0;
+        }
+
+        if (faction.isClaimOnCooldown()) {
+            String remaining = formatDuration(faction.getClaimCooldownRemaining());
+            new Message("Your faction can claim again in %s", remaining).fail().send(player, false);
             return 0;
         }
 
@@ -209,8 +218,10 @@ public class ClaimCommand implements Command {
         }
 
         ArrayList<ChunkPos> chunks = new ArrayList<>();
-        HashMap<UUID, Integer> enemyClaimsTaken = new HashMap<>();
+        HashMap<UUID, Integer> warClaimsTaken = new HashMap<>();
         HashSet<Claim> claimsToRemove = new HashSet<>();
+        HashSet<ChunkPos> warCaptures = new HashSet<>();
+        boolean hasWilderness = false;
 
         for (int x = -size + 1; x < size; x++) {
             for (int z = -size + 1; z < size; z++) {
@@ -228,14 +239,14 @@ public class ClaimCommand implements Command {
                         continue;
                     }
 
-                    if (owner == null || !faction.isMutualEnemies(owner.getID())) {
-                        new Message("You must be mutual enemies with %s to claim this chunk",
-                                owner == null ? "this faction" : owner.getName()).fail()
-                                        .send(player, false);
+                    if (owner == null || !faction.isMutualWar(owner.getID())) {
+                        new Message("You must be mutually at war with %s to claim this chunk",
+                                owner == null ? "this faction" : owner.getName()).fail().send(player,
+                                        false);
                         return null;
                     }
 
-                    int alreadyTaken = enemyClaimsTaken.getOrDefault(owner.getID(), 0);
+                    int alreadyTaken = warClaimsTaken.getOrDefault(owner.getID(), 0);
                     int remainingDemesne = owner.getDemesne() - alreadyTaken;
                     if (remainingDemesne <= owner.getPower()) {
                         new Message("%s still has enough power to protect this chunk",
@@ -243,8 +254,11 @@ public class ClaimCommand implements Command {
                         return null;
                     }
 
-                    enemyClaimsTaken.put(owner.getID(), alreadyTaken + 1);
+                    warClaimsTaken.put(owner.getID(), alreadyTaken + 1);
                     claimsToRemove.add(existingClaim);
+                    warCaptures.add(chunkPos);
+                } else {
+                    hasWilderness = true;
                 }
 
                 chunks.add(chunkPos);
@@ -265,7 +279,9 @@ public class ClaimCommand implements Command {
         List<Claim> existingLevelClaims = faction.getClaims().stream()
                 .filter(claim -> claim.level.equals(dimension)).toList();
 
-        if (!existingLevelClaims.isEmpty()) {
+        boolean requiresConnection = hasWilderness;
+
+        if (!existingLevelClaims.isEmpty() && requiresConnection) {
             int connectedIndex = -1;
             for (int i = 0; i < chunks.size(); i++) {
                 ChunkPos chunk = chunks.get(i);
@@ -286,7 +302,7 @@ public class ClaimCommand implements Command {
             }
         }
 
-        return new ClaimPlan(chunks, claimsToRemove);
+        return new ClaimPlan(chunks, claimsToRemove, warCaptures);
     }
 
     private int applyClaimPlan(ServerPlayerEntity player, Faction faction, String dimension, int size,
@@ -300,11 +316,33 @@ public class ClaimCommand implements Command {
                 existing.remove();
             }
 
+            if (plan.warCaptures.contains(chunk)) {
+                Claim.add(new Claim(chunk.x, chunk.z, dimension, faction.getID()));
+                continue;
+            }
+
             if (!faction.addClaim(chunk.x, chunk.z, dimension)) {
                 new Message("Claims must be connected to your existing territory").fail().send(player,
                         false);
                 return 0;
             }
+        }
+
+        boolean triggeredCooldown = false;
+        for (ChunkPos chunk : plan.chunks) {
+            if (touchesOtherFactionTerritory(faction, chunk, dimension)) {
+                triggeredCooldown = true;
+                break;
+            }
+        }
+
+        if (triggeredCooldown) {
+            long expiry = Math.max(System.currentTimeMillis() + CONTESTED_CLAIM_COOLDOWN_MS,
+                    faction.getClaimCooldownExpiry());
+            faction.setClaimCooldownExpiry(expiry);
+            String cooldownText = formatDuration(CONTESTED_CLAIM_COOLDOWN_MS);
+            new Message("Claiming next to another faction triggered a %s cooldown for further claims.",
+                    cooldownText).format(Formatting.YELLOW).send(faction);
         }
 
         if (size == 1) {
@@ -574,6 +612,21 @@ public class ClaimCommand implements Command {
             builder.append(Math.max(1, seconds)).append("s");
         }
         return builder.toString();
+    }
+
+    private boolean touchesOtherFactionTerritory(Faction faction, ChunkPos chunk, String dimension) {
+        int[][] directions = new int[][] { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } };
+        for (int[] dir : directions) {
+            Claim neighbor = Claim.get(chunk.x + dir[0], chunk.z + dir[1], dimension);
+            if (neighbor == null)
+                continue;
+
+            Faction owner = neighbor.getFaction();
+            if (owner != null && owner.getID() != faction.getID()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private int removeAll(CommandContext<ServerCommandSource> context)

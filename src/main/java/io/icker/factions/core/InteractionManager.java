@@ -288,7 +288,7 @@ public class InteractionManager {
             return ActionResult.SUCCESS;
         }
 
-        if (!sourceFaction.isMutualEnemies(targetFaction.getID())) {
+        if (!sourceFaction.isMutualWar(targetFaction.getID())) {
             return ActionResult.SUCCESS;
         }
 

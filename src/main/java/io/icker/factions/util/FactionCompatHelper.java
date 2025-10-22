@@ -80,10 +80,10 @@ public class FactionCompatHelper {
     }
 
     private static Relationship.Status getWorstRelation(Relationship r1, Relationship r2) {
-        boolean r1Enemy = r1 != null && r1.status == Relationship.Status.ENEMY;
-        boolean r2Enemy = r2 != null && r2.status == Relationship.Status.ENEMY;
+        boolean r1Enemy = r1 != null && r1.status == Relationship.Status.WAR;
+        boolean r2Enemy = r2 != null && r2.status == Relationship.Status.WAR;
 
-        if (r1Enemy || r2Enemy) return Relationship.Status.ENEMY;
+        if (r1Enemy || r2Enemy) return Relationship.Status.WAR;
 
         boolean r1Neutral = r1 == null || r1.status == Relationship.Status.NEUTRAL;
         boolean r2Neutral = r2 == null || r2.status == Relationship.Status.NEUTRAL;
@@ -104,7 +104,7 @@ public class FactionCompatHelper {
             case ALLY -> actualStatus != Relationship.Status.ALLY; // Allies protected
             case FRIENDLY -> actualStatus != Relationship.Status.ALLY && 
                                 actualStatus != Relationship.Status.FRIENDLY; // Friendly+ protected
-            case NEUTRAL -> actualStatus == Relationship.Status.ENEMY; // Only enemies can fight
+            case NEUTRAL -> actualStatus == Relationship.Status.WAR; // Only enemies can fight
             case NONE -> false; // No damage allowed
         };
     }

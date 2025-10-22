@@ -71,7 +71,7 @@ public class InfoCommand implements Command {
                 .map(fac -> fac.getColor() + fac.getName())
                 .collect(Collectors.joining(Formatting.GRAY + ", "));
 
-        String enemiesWith = Formatting.GRAY + faction.getEnemiesWith().stream()
+        String warsWith = Formatting.GRAY + faction.getWarWith().stream()
                 .map(rel -> Faction.get(rel.target)).map(fac -> fac.getColor() + fac.getName())
                 .collect(Collectors.joining(Formatting.GRAY + ", "));
 
@@ -103,8 +103,8 @@ public class InfoCommand implements Command {
         new Message(Formatting.AQUA + "Friendly (" + Formatting.WHITE
                 + faction.getMutualFriendly().size() + Formatting.AQUA + "): ").add(mutualFriendly)
                         .send(player, false);
-        new Message(Formatting.RED + "Enemies (" + Formatting.WHITE
-                + faction.getEnemiesWith().size() + Formatting.RED + "): ").add(enemiesWith)
+        new Message(Formatting.RED + "Wars (" + Formatting.WHITE
+                + faction.getWarWith().size() + Formatting.RED + "): ").add(warsWith)
                         .send(player, false);
 
         // Add compat config info

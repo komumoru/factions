@@ -68,6 +68,9 @@ public class Faction {
     @Field("UnclaimCooldownExpiry")
     private long unclaimCooldownExpiry = -1;
 
+    @Field("ClaimCooldownExpiry")
+    private long claimCooldownExpiry = -1;
+
     @Field("FirstClaimConfirmed")
     private boolean firstClaimConfirmed = false;
 
@@ -268,10 +271,10 @@ public class Faction {
                 && getReverse(rel).status == Relationship.Status.ALLY;
     }
 
-    public boolean isMutualEnemies(UUID target) {
+    public boolean isMutualWar(UUID target) {
         Relationship rel = getRelationship(target);
-        return rel.status == Relationship.Status.ENEMY
-                && getReverse(rel).status == Relationship.Status.ENEMY;
+        return rel.status == Relationship.Status.WAR
+                && getReverse(rel).status == Relationship.Status.WAR;
     }
 
     public List<Relationship> getMutualAllies() {
@@ -298,14 +301,14 @@ public class Faction {
                 .filter(rel -> getReverse(rel).status == Relationship.Status.FRIENDLY).toList();
     }
 
-    public List<Relationship> getEnemiesWith() {
-        return relationships.stream().filter(rel -> rel.status == Relationship.Status.ENEMY)
+    public List<Relationship> getWarWith() {
+        return relationships.stream().filter(rel -> rel.status == Relationship.Status.WAR)
                 .toList();
     }
 
-    public List<Relationship> getEnemiesOf() {
+    public List<Relationship> getWarOf() {
         return relationships.stream()
-                .filter(rel -> getReverse(rel).status == Relationship.Status.ENEMY).toList();
+                .filter(rel -> getReverse(rel).status == Relationship.Status.WAR).toList();
     }
 
     public void removeRelationship(UUID target) {
@@ -387,6 +390,22 @@ public class Faction {
 
     public long getUnclaimCooldownRemaining() {
         return Math.max(0, unclaimCooldownExpiry - System.currentTimeMillis());
+    }
+
+    public long getClaimCooldownExpiry() {
+        return claimCooldownExpiry;
+    }
+
+    public void setClaimCooldownExpiry(long expiry) {
+        this.claimCooldownExpiry = expiry;
+    }
+
+    public boolean isClaimOnCooldown() {
+        return claimCooldownExpiry > System.currentTimeMillis();
+    }
+
+    public long getClaimCooldownRemaining() {
+        return Math.max(0, claimCooldownExpiry - System.currentTimeMillis());
     }
 
     public boolean isFirstClaimConfirmed() {

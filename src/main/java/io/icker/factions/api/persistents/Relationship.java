@@ -8,7 +8,7 @@ import io.icker.factions.database.Field;
 
 public class Relationship {
     public enum Status {
-        ALLY, FRIENDLY, NEUTRAL, ENEMY,
+        ALLY, FRIENDLY, NEUTRAL, WAR,
     }
 
     public enum Permissions {

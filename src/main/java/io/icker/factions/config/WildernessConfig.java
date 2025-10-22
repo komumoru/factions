@@ -5,11 +5,11 @@ import java.util.List;
 import com.google.gson.annotations.SerializedName;
 
 public class WildernessConfig {
-    @SerializedName("breakWhitelist")
-    public List<String> BREAK_WHITELIST = List.of();
+    @SerializedName("breakBlacklist")
+    public List<String> BREAK_BLACKLIST = List.of();
 
-    @SerializedName("placeWhitelist")
-    public List<String> PLACE_WHITELIST = List.of();
+    @SerializedName("placeBlacklist")
+    public List<String> PLACE_BLACKLIST = List.of();
 
     @SerializedName("allowInteractions")
     public boolean ALLOW_INTERACTIONS = true;

@@ -367,9 +367,9 @@ public class InteractionManager {
                 if (target == null) {
                     return ActionResult.PASS;
                 }
-                return FactionsMod.CONFIG.WILDERNESS.BREAK_WHITELIST.contains(target.toString())
-                        ? ActionResult.PASS
-                        : ActionResult.FAIL;
+                return FactionsMod.CONFIG.WILDERNESS.BREAK_BLACKLIST.contains(target.toString())
+                        ? ActionResult.FAIL
+                        : ActionResult.PASS;
             }
             case PLACE_BLOCKS -> {
                 if (target == null) {
@@ -389,9 +389,9 @@ public class InteractionManager {
                             : ActionResult.FAIL;
                 }
 
-                return FactionsMod.CONFIG.WILDERNESS.PLACE_WHITELIST.contains(target.toString())
-                        ? ActionResult.PASS
-                        : ActionResult.FAIL;
+                return FactionsMod.CONFIG.WILDERNESS.PLACE_BLACKLIST.contains(target.toString())
+                        ? ActionResult.FAIL
+                        : ActionResult.PASS;
             }
             case USE_BLOCKS, USE_INVENTORIES, USE_ENTITIES -> {
                 return FactionsMod.CONFIG.WILDERNESS.ALLOW_INTERACTIONS ? ActionResult.PASS

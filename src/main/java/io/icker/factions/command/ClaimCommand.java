@@ -31,7 +31,7 @@ import net.minecraft.world.World;
 
 public class ClaimCommand implements Command {
     private static final long CONFIRMATION_TIMEOUT_MS = 60_000L;
-    private static final long CONTESTED_CLAIM_COOLDOWN_MS = 3_600_000L;
+    private static final long CONTESTED_CLAIM_COOLDOWN_MS = 1_800_000L;
     private static final Map<UUID, PendingClaim> PENDING_CLAIMS = new HashMap<>();
     private static final Map<UUID, PendingUnclaim> PENDING_UNCLAIMS = new HashMap<>();
 

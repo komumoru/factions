@@ -8,8 +8,14 @@ public class WildernessConfig {
     @SerializedName("breakBlacklist")
     public List<String> BREAK_BLACKLIST = List.of();
 
+    @SerializedName("breakModBlacklist")
+    public List<String> BREAK_MOD_BLACKLIST = List.of();
+
     @SerializedName("placeBlacklist")
     public List<String> PLACE_BLACKLIST = List.of();
+
+    @SerializedName("placeModBlacklist")
+    public List<String> PLACE_MOD_BLACKLIST = List.of();
 
     @SerializedName("allowInteractions")
     public boolean ALLOW_INTERACTIONS = true;

@@ -367,6 +367,11 @@ public class InteractionManager {
                 if (target == null) {
                     return ActionResult.PASS;
                 }
+                if (FactionsMod.CONFIG.WILDERNESS.BREAK_MOD_BLACKLIST
+                        .contains(target.getNamespace())) {
+                    return ActionResult.FAIL;
+                }
+
                 return FactionsMod.CONFIG.WILDERNESS.BREAK_BLACKLIST.contains(target.toString())
                         ? ActionResult.FAIL
                         : ActionResult.PASS;
@@ -374,6 +379,11 @@ public class InteractionManager {
             case PLACE_BLOCKS -> {
                 if (target == null) {
                     return ActionResult.PASS;
+                }
+
+                if (FactionsMod.CONFIG.WILDERNESS.PLACE_MOD_BLACKLIST
+                        .contains(target.getNamespace())) {
+                    return ActionResult.FAIL;
                 }
 
                 Identifier waterId = Registries.FLUID.getId(Fluids.WATER);
